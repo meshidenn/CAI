@@ -19,6 +19,19 @@ class DictIterDataset(Dataset):
         return items
 
 
+class DictIterLine(Dataset):
+    def __init__(self, ds, keys):
+        self.ds = ds
+        self.keys = keys
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, idx):
+        items = [self.ds[idx][kn] for kn in self.keys]
+        return items
+
+
 class QDCollator(DataCollatorWithPadding):
     def __call__(self, features: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         num_docs = len(features[0])

@@ -36,10 +36,13 @@ class BEIRSpladeModel:
 
 
 class Splade(nn.Module):
-    def __init__(self, model_type_or_dir, **kwargs):
+    def __init__(self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, **kwargs):
         super().__init__()
         self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
         self.loss_func = nn.CrossEntropyLoss()
+        self.lambda_d = lambda_d
+        self.lambda_q = lambda_q
+        self.FLOPS = FLOPS()
 
     def forward(
         self,
@@ -57,6 +60,8 @@ class Splade(nn.Module):
             range(len(scores)), dtype=torch.long, device=scores.device
         )  # Example a[i] should match with b[i]
         loss = self.loss_func(scores, labels)
+        loss += self.lambda_d * self.FLOPS(d_vecs)
+        loss += self.lambda_q * self.FLOPS(q_vecs)
         return RankTrainOutput(loss=loss, scores=scores)
 
     def encode(self, **kwargs):
@@ -180,3 +185,12 @@ class Splade(nn.Module):
 class RankTrainOutput(ModelOutput):
     loss: Optional[torch.FloatTensor] = None
     scores: torch.FloatTensor = None
+
+
+class FLOPS:
+    """constraint from Minimizing FLOPs to Learn Efficient Sparse Representations
+    https://arxiv.org/abs/2004.05665
+    """
+
+    def __call__(self, batch_rep):
+        return torch.sum(torch.mean(torch.abs(batch_rep), dim=0) ** 2)
