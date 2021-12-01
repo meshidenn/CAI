@@ -308,12 +308,10 @@ def main():
             train_dataset = []
             with open(data_args.train_file) as f:
                 for i, line in enumerate(f):
-                    if i > 100000:
-                        keys = list(jline.keys())
-                        break
                     jline = json.loads(line)
                     train_dataset.append(jline)
 
+            keys = list(jline.keys())
             train_dataset = DictIterLine(train_dataset, keys)
 
         if data_args.validation_file is not None:
