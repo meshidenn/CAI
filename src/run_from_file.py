@@ -29,6 +29,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Optional, Any, List, Dict, Union
 
+from tqdm import tqdm
 import torch
 import transformers
 from transformers import (
@@ -307,7 +308,7 @@ def main():
         if data_args.train_file is not None:
             train_dataset = []
             with open(data_args.train_file) as f:
-                for i, line in enumerate(f):
+                for line in tqdm(f):
                     jline = json.loads(line)
                     train_dataset.append(jline)
 
@@ -317,7 +318,7 @@ def main():
         if data_args.validation_file is not None:
             eval_dataset = []
             with open(data_args.validation_file) as f:
-                for line in f:
+                for line in tqdm(f):
                     jline = json.loads(line)
                     eval_dataset.append(jline)
 

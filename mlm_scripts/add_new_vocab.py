@@ -1,0 +1,165 @@
+import argparse
+import itertools
+import json
+import re
+import os
+import tempfile
+from collections import Counter
+from pathlib import Path
+from tqdm import tqdm
+import numpy as np
+from transformers import AutoTokenizer, DistilBertTokenizer, BertTokenizer
+from tokenizers import Tokenizer, normalizers
+from tokenizers.models import WordPiece
+from tokenizers.normalizers import Lowercase, NFD, StripAccents
+from tokenizers.pre_tokenizers import Whitespace
+from tokenizers.trainers import WordPieceTrainer
+from tokenizers.processors import TemplateProcessing
+
+
+CODE_REMOVER = re.compile("[!\"#$%&'\\\\()*+,-./:;<=>?@[\\]^_`{|}~「」〔〕“”〈〉『』【】＆＊・（）＄＠。、？！｀＋￥％0-9]+")
+
+
+def calc_score_diff(freq1, freq2):
+    v_freq1 = list(freq1.values())
+    v_freq2 = list(freq2.values())
+    N1 = np.sum(v_freq1)
+    N2 = np.sum(v_freq2)
+    score1 = np.sum(np.log(v_freq1) - np.log(N1))
+    score2 = np.sum(np.log(v_freq2) - np.log(N2))
+    return (score2 - score1) / score1
+
+
+def calc_score(texts, present_tokenizer):
+    prob = Counter()
+    tk_docs = []
+    for text in tqdm(texts):
+        output = present_tokenizer.tokenize(text)
+        tk_docs.append(output)
+        prob.update(output)
+
+    v_prob = list(prob.values())
+    N = np.sum(v_prob)
+    for k in prob:
+        prob[k] /= N
+
+    score = []
+    for tk_doc in tqdm(tk_docs):
+        score.append(np.sum([np.log(prob[t]) for t in tk_doc]))
+
+    score = np.mean(score)
+    return score
+
+
+def remove_partial_vocab(add_vocabs, present_vocabs, increment, remover):
+    new_add_vocabs = []
+    present_present_vocabs = present_vocabs
+    for av in tqdm(add_vocabs):
+        if remover and CODE_REMOVER.search(av):
+            continue
+        partial_hit = any([av in pv for pv in present_present_vocabs])
+        if not partial_hit:
+            new_add_vocabs.append(av)
+            present_present_vocabs.add(av)
+
+    return new_add_vocabs[:increment]
+
+
+def build_target_size_vocab(increment, texts, present_tokenizer, remover=True):
+    t_cls = present_tokenizer.cls_token
+    t_sep = present_tokenizer.sep_token
+    t_unk = present_tokenizer.unk_token
+    t_pad = present_tokenizer.pad_token
+    t_mask = present_tokenizer.mask_token
+    present_vocab = set(present_tokenizer.get_vocab().keys())
+    prev_vocab_size = len(present_vocab)
+    tmp_tokenizer = Tokenizer(WordPiece(unk_token=t_unk))
+    tmp_tokenizer.normalizer = normalizers.Sequence([NFD(), Lowercase(), StripAccents()])
+    tmp_tokenizer.pre_tokenizer = Whitespace()
+    trainer = WordPieceTrainer(
+        vocab_size=prev_vocab_size + increment,
+        special_tokens=[f"{t_unk}", f"{t_cls}", f"{t_sep}", f"{t_pad}", f"{t_mask}"],
+    )
+    tmp_tokenizer.train_from_iterator(texts, trainer)
+
+    freq = Counter()
+    for text in texts:
+        output = tmp_tokenizer.encode(text)
+        freq.update(output.tokens)
+
+    add_vocabs = [k for k, v in freq.most_common() if k not in present_vocab]
+    add_vocabs = remove_partial_vocab(add_vocabs, present_vocab, increment, remover)
+
+    # to alling order of present_vocab, re-assign vocab as list.
+    present_vocab = list(present_tokenizer.vocab)
+    vocabs = present_vocab + add_vocabs
+    vocab_file = tempfile.NamedTemporaryFile()
+    with open(vocab_file.name, "w") as f:
+        for v in vocabs:
+            print(v, file=f)
+
+    return vocab_file, prev_vocab_size
+
+
+def main(args):
+    input_file = Path(args.input)
+    out_dir = Path(args.output)
+    present_tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+    texts = []
+
+    with input_file.open(mode="r") as f:
+        for line in tqdm(f):
+            jline = json.loads(line)
+            text = jline["title"] + " " + jline["text"]
+            texts.append(text)
+
+    out_dir = os.path.join(out_dir, args.preproc)
+    if args.preproc == "pre_tokenize":
+        from pyserini.analysis import Analyzer, get_lucene_analyzer
+
+        print("analyze")
+        analyzer = Analyzer(get_lucene_analyzer())
+        tk_texts = []
+        for text in texts:
+            tokens = analyzer.analyze(text)
+            tk_texts.append(" ".join(tokens))
+            texts = tk_texts
+
+    if args.remover:
+        out_dir = os.path.join(out_dir, "remove")
+    else:
+        out_dir = os.path.join(out_dir, "raw")
+
+    scores = dict()
+    increment = 1000
+    vocab_size = len(present_tokenizer.get_vocab())
+    score = calc_score(texts, present_tokenizer)
+    scores[vocab_size] = score
+
+    for i in range(20):
+        vocab_file, prev_vocab_size = build_target_size_vocab(increment, texts, present_tokenizer, args.remover)
+        present_tokenizer = DistilBertTokenizer(vocab_file.name, do_lower_case=True)
+        update_vocab_size = len(present_tokenizer.vocab)
+        score = calc_score(texts, present_tokenizer)
+        scores[update_vocab_size] = score
+        tk_outpath = os.path.join(out_dir, str(update_vocab_size))
+        present_tokenizer.save_pretrained(tk_outpath)
+        print(update_vocab_size, prev_vocab_size)
+        if update_vocab_size - prev_vocab_size < increment:
+            break
+
+    with open(os.path.join(out_dir, "scores.json"), "w") as f:
+        json.dump(scores, f)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--input")
+    parser.add_argument("--output")
+    parser.add_argument("--preproc", help="raw or pre_tokenize")
+    parser.add_argument("--remover", action="store_true")
+
+    args = parser.parse_args()
+
+    main(args)

@@ -18,6 +18,39 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+class BEIRSpladeModelIDF:
+    def __init__(self, model, tokenizer, idf, max_length=256, sqrt=True):
+        self.max_length = max_length
+        self.tokenizer = tokenizer
+        self.model = model
+        self.idf = self._init_idf(idf, sqrt)
+        print(self.idf.shape)
+
+    def _init_idf(self, idf, sqrt):
+        idf_vec = np.ones(len(self.tokenizer.vocab))
+        for k, v in idf.items():
+            if v == 0.0:
+                continue
+            if sqrt:
+                idf_vec[k] = np.sqrt(v)
+            else:
+                idf_vec[k] = v
+        return idf_vec
+
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        X = self.model.encode_sentence_bert(self.tokenizer, queries, is_q=True, maxlen=self.max_length)
+        X *= self.idf
+        return X
+
+    # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        X = self.model.encode_sentence_bert(self.tokenizer, sentences, maxlen=self.max_length)
+        X *= self.idf
+        return X
+
+
 class BEIRSpladeModel:
     def __init__(self, model, tokenizer, max_length=256):
         self.max_length = max_length

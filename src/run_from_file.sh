@@ -1,0 +1,13 @@
+python run_from_file.py \
+    --model_name_or_path distilbert-base-uncased \
+    --train_file /home/gaia_data/iida.h/msmarco/passage/triples.train.small.tokenize.jsonl \
+    --num_train_epoch 1 \
+    --do_train \
+    --fp16 \
+    --fp16_opt_level O2 \
+    --per_device_train_batch_size 8 \
+    --warmup_ratio 0.05 \
+    --save_steps 50000 \
+    --dataloader_drop_last True \
+    --overwrite_output_dir \
+    --output_dir ./tmp

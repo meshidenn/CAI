@@ -47,7 +47,8 @@ from transformers import (
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
-
+from transformers.optimization import get_scheduler
+from RecAdam import RecAdam
 
 # Will error if the minimal version of Transformers is not installed. Remove at your own risks.
 check_min_version("4.12.0")
@@ -192,12 +193,18 @@ class DataTrainingArguments:
                     raise ValueError("`validation_file` should be a csv, a json or a txt file.")
 
 
+@dataclass
+class RegTrainingArguments(TrainingArguments):
+    recadam_anneal_w: float = field(default=1.0)
+    recadam_anneal_lamb: float = field(default=0.8)
+
+
 def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, RegTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
@@ -350,11 +357,18 @@ def main():
             revision=model_args.model_revision,
             use_auth_token=True if model_args.use_auth_token else None,
         )
+
+        org_model = AutoModelForMaskedLM.from_pretrained(
+            model_args.model_name_or_path,
+            from_tf=bool(".ckpt" in model_args.model_name_or_path),
+            config=config,
+            cache_dir=model_args.cache_dir,
+            revision=model_args.model_revision,
+            use_auth_token=True if model_args.use_auth_token else None,
+        )
     else:
         logger.info("Training new model from scratch")
         model = AutoModelForMaskedLM.from_config(config)
-
-    model.resize_token_embeddings(len(tokenizer))
 
     # Preprocessing the datasets.
     # First we tokenize all the texts.
@@ -481,6 +495,84 @@ def main():
         pad_to_multiple_of=8 if pad_to_multiple_of_8 else None,
     )
 
+    no_decay = ["bias", "LayerNorm.weight"]
+    anneal_param = ["distilbert", "vocab"]
+    model.to("cuda")
+    org_model.to("cuda")
+
+    # bias or layernorm is not applied to weight_decay
+    # annewal_w is applied to parameter which include model name,
+    optimizer_grouped_parameters = [
+        {
+            "params": [
+                p
+                for n, p in model.named_parameters()
+                if not any(nd in n for nd in no_decay) and any(ap in n for ap in anneal_param)
+            ],
+            "weight_decay": training_args.weight_decay,
+            "anneal_w": training_args.recadam_anneal_w,
+            "pretrain_params": [
+                p_p
+                for p_n, p_p in org_model.named_parameters()
+                if not any(nd in p_n for nd in no_decay) and any(ap in p_n for ap in anneal_param)
+            ],
+        },
+        {
+            "params": [
+                p
+                for n, p in model.named_parameters()
+                if not any(nd in n for nd in no_decay) and not any(ap in n for ap in anneal_param)
+            ],
+            "weight_decay": training_args.weight_decay,
+            "anneal_w": 0.0,
+            "pretrain_params": [
+                p_p
+                for p_n, p_p in org_model.named_parameters()
+                if not any(nd in p_n for nd in no_decay) and not any(ap in p_n for ap in anneal_param)
+            ],
+        },
+        {
+            "params": [
+                p
+                for n, p in model.named_parameters()
+                if any(nd in n for nd in no_decay) and any(ap in n for ap in anneal_param)
+            ],
+            "weight_decay": 0.0,
+            "anneal_w": training_args.recadam_anneal_w,
+            "pretrain_params": [
+                p_p
+                for p_n, p_p in org_model.named_parameters()
+                if any(nd in p_n for nd in no_decay) and any(ap in p_n for ap in anneal_param)
+            ],
+        },
+        {
+            "params": [
+                p
+                for n, p in model.named_parameters()
+                if any(nd in n for nd in no_decay) and not any(ap in n for ap in anneal_param)
+            ],
+            "weight_decay": 0.0,
+            "anneal_w": 0.0,
+            "pretrain_params": [
+                p_p
+                for p_n, p_p in org_model.named_parameters()
+                if any(nd in p_n for nd in no_decay) and not any(ap in p_n for ap in anneal_param)
+            ],
+        },
+    ]
+
+    optimizer = RecAdam(
+        optimizer_grouped_parameters,
+        betas=(training_args.adam_beta1, training_args.adam_beta2),
+        eps=training_args.adam_epsilon,
+        lr=training_args.learning_rate,
+        weight_decay=training_args.weight_decay,
+        anneal_fun="constant",
+        anneal_lamb=training_args.recadam_anneal_lamb,
+    )
+
+    # schedular = get_scheduler(training_args.lr_scheduler_type, optimizer)
+
     # Initialize our Trainer
     trainer = Trainer(
         model=model,
@@ -489,6 +581,7 @@ def main():
         eval_dataset=eval_dataset if training_args.do_eval else None,
         tokenizer=tokenizer,
         data_collator=data_collator,
+        optimizers=(optimizer, None),
     )
 
     # Training
