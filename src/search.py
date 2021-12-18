@@ -42,7 +42,7 @@ def main(args):
 
     dataset = args.dataset
     data_path = os.path.join(args.data_dir, dataset)
-    out_path = os.path.join(data_path, "result", args.out_name)
+    out_path = os.path.join(data_path, "result", args.out_name, "result.txt")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
     idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     calc_models = {
@@ -63,6 +63,7 @@ def main(args):
         out_results.append((k, dataset, res))
         print("{} model result for {}:".format(k, dataset), res, flush=True)
 
+    os.makedirs(os.path.join(data_path, "result", args.out_name))
     with open(out_path, "w") as f:
         for o in out_results:
             print("{} model result for {}:".format(o[0], o[1]), o[2], file=f)
