@@ -77,7 +77,7 @@ except ValueError:
 
 #### Provide model save path
 if args.out_suffix:
-    model_save_path = os.path.join(data_path, "output", "GenQ-sploss-{}-{}".format(out_suffix, dataset))
+    model_save_path = os.path.join(data_path, "output", "GenQ-sploss-{}-{}".format(args.out_suffix, dataset))
 else:
     model_save_path = os.path.join(data_path, "output", "GenQ-sploss-{}".format(dataset))
 os.makedirs(model_save_path, exist_ok=True)
