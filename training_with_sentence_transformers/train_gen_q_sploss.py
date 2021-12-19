@@ -19,6 +19,7 @@ logging.basicConfig(
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_path")
 parser.add_argument("--dataset")
+parser.add_argument("--out_suffix", default="")
 parser.add_argument("--train_batch_size", default=64, type=int)
 parser.add_argument("--max_seq_length", default=300, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
@@ -75,7 +76,10 @@ except ValueError:
     ir_evaluator = retriever.load_dummy_evaluator()
 
 #### Provide model save path
-model_save_path = os.path.join(data_path, "output", "GenQ-sploss-{}".format(dataset))
+if args.out_suffix:
+    model_save_path = os.path.join(data_path, "output", "GenQ-sploss-{}-{}".format(out_suffix, dataset))
+else:
+    model_save_path = os.path.join(data_path, "output", "GenQ-sploss-{}".format(dataset))
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params
