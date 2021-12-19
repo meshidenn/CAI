@@ -6,6 +6,7 @@ from beir.retrieval.train import TrainRetriever
 from sentence_transformers import SentenceTransformer
 
 import argparse
+import json
 import pathlib, os
 import logging
 import models
