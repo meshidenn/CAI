@@ -13,7 +13,7 @@ import losses
 
 
 def choose_model(data_path, percent=0.05):
-    score_file = os.path.join(data_path, "tokenizer", "pre_tokenize", "scores.json")
+    score_file = os.path.join(data_path, "tokenizer", "pre_tokenize", "raw", "scores.json")
     with open(score_file) as f:
         scores = json.load(f)
 
