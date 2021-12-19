@@ -212,8 +212,8 @@ def choose_model(data_path, percent=0.05):
         if diff < criteria:
             break
 
-    target_model = num_vocabs[i + 1]
-    target_model_path = os.path.join(data_path, "new_model", "init_model", "pre_tokenize", f"{target_model}")
+    target_model_vocab = num_vocabs[i + 1]
+    target_model_path = os.path.join(data_path, "new_model", "init_model", "pre_tokenize", f"{target_model_vocab}")
     return target_model_path, target_model_vocab
 
 
