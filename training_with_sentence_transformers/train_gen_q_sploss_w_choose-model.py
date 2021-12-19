@@ -26,7 +26,7 @@ def choose_model(data_path, percent=0.05):
             break
 
     target_model = num_vocabs[i + 1]
-    target_model_path = os.path.join(data_path, "new_model", "init_model", "pre_tokenize", "raw", f"{target_model}")
+    target_model_path = os.path.join(data_path, "new_model", "init_model", "pre_tokenize", f"{target_model}")
     return target_model_path
 
 
