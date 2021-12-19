@@ -94,7 +94,7 @@ except ValueError:
     ir_evaluator = retriever.load_dummy_evaluator()
 
 #### Provide model save path
-model_save_path = os.path.join(data_path, "output", "GenQ-sploss-{}".format(dataset))
+model_save_path = os.path.join(data_path, "output", "GenQ-sploss-vocab-{}".format(dataset))
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params
