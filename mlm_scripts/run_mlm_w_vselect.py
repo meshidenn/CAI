@@ -214,7 +214,7 @@ def choose_model(data_path, percent=0.05):
 
     target_model = num_vocabs[i + 1]
     target_model_path = os.path.join(data_path, "new_model", "init_model", "pre_tokenize", f"{target_model}")
-    return target_model_path
+    return target_model_path, target_model_vocab
 
 
 def main():
@@ -335,7 +335,10 @@ def main():
     # The .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
 
-    model_name_or_path = choose_model(args.model_name_or_path)
+    model_name_or_path, vocab_num = choose_model(model_args.model_name_or_path)
+    training_args.output_dir = os.path.join(
+        training_args.output_dir, f"{vocab_num}-{training_args.recadam_anneal_lamb}"
+    )
     config_kwargs = {
         "cache_dir": model_args.cache_dir,
         "revision": model_args.model_revision,
