@@ -83,15 +83,16 @@ else:
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params
-num_epochs = 1
-evaluation_steps = 5000
-warmup_steps = int(len(train_samples) * num_epochs / retriever.batch_size * 0.1)
+# num_epochs = 1
+# evaluation_steps = 5000
+warmup_steps = int(len(train_samples) * args.epochs / retriever.batch_size * 0.1)
 
 retriever.fit(
     train_objectives=[(train_dataloader, train_loss)],
     evaluator=ir_evaluator,
-    epochs=num_epochs,
+    epochs=args.epochs,
     output_path=model_save_path,
     warmup_steps=warmup_steps,
     use_amp=True,
+    checkpoint_path=model_save_path,
 )
