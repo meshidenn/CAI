@@ -9,8 +9,8 @@ from transformers import DistilBertTokenizerFast
 
 
 def main(args):
-    org_tokenizer = AutoTokenizer.from_pretrained(args.splade_path)
-    org_model = AutoModelForMaskedLM.from_pretrained(args.splade_path)
+    org_tokenizer = AutoTokenizer.from_pretrained(args.org_model_path)
+    org_model = AutoModelForMaskedLM.from_pretrained(args.org_model_path)
     new_tokenizer = DistilBertTokenizerFast(os.path.join(args.new_tokenizer_path, "vocab.txt"))
     new_model = AutoModelForMaskedLM.from_pretrained(args.splade_path)
 
@@ -38,7 +38,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--splade_path")
+    parser.add_argument("--org_model_path")
     parser.add_argument("--new_tokenizer_path")
     parser.add_argument("--output_path")
 

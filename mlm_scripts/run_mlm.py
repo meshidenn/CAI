@@ -195,6 +195,7 @@ class DataTrainingArguments:
 
 @dataclass
 class RegTrainingArguments(TrainingArguments):
+    reg: bool = field(default=False)
     recadam_anneal_w: float = field(default=1.0)
     recadam_anneal_lamb: float = field(default=0.8)
 
@@ -502,74 +503,77 @@ def main():
 
     # bias or layernorm is not applied to weight_decay
     # annewal_w is applied to parameter which include model name,
-    optimizer_grouped_parameters = [
-        {
-            "params": [
-                p
-                for n, p in model.named_parameters()
-                if not any(nd in n for nd in no_decay) and any(ap in n for ap in anneal_param)
-            ],
-            "weight_decay": training_args.weight_decay,
-            "anneal_w": training_args.recadam_anneal_w,
-            "pretrain_params": [
-                p_p
-                for p_n, p_p in org_model.named_parameters()
-                if not any(nd in p_n for nd in no_decay) and any(ap in p_n for ap in anneal_param)
-            ],
-        },
-        {
-            "params": [
-                p
-                for n, p in model.named_parameters()
-                if not any(nd in n for nd in no_decay) and not any(ap in n for ap in anneal_param)
-            ],
-            "weight_decay": training_args.weight_decay,
-            "anneal_w": 0.0,
-            "pretrain_params": [
-                p_p
-                for p_n, p_p in org_model.named_parameters()
-                if not any(nd in p_n for nd in no_decay) and not any(ap in p_n for ap in anneal_param)
-            ],
-        },
-        {
-            "params": [
-                p
-                for n, p in model.named_parameters()
-                if any(nd in n for nd in no_decay) and any(ap in n for ap in anneal_param)
-            ],
-            "weight_decay": 0.0,
-            "anneal_w": training_args.recadam_anneal_w,
-            "pretrain_params": [
-                p_p
-                for p_n, p_p in org_model.named_parameters()
-                if any(nd in p_n for nd in no_decay) and any(ap in p_n for ap in anneal_param)
-            ],
-        },
-        {
-            "params": [
-                p
-                for n, p in model.named_parameters()
-                if any(nd in n for nd in no_decay) and not any(ap in n for ap in anneal_param)
-            ],
-            "weight_decay": 0.0,
-            "anneal_w": 0.0,
-            "pretrain_params": [
-                p_p
-                for p_n, p_p in org_model.named_parameters()
-                if any(nd in p_n for nd in no_decay) and not any(ap in p_n for ap in anneal_param)
-            ],
-        },
-    ]
+    if training_args.recadam < 1.0 or training_args.reg:
+        optimizer_grouped_parameters = [
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if not any(nd in n for nd in no_decay) and any(ap in n for ap in anneal_param)
+                ],
+                "weight_decay": training_args.weight_decay,
+                "anneal_w": training_args.recadam_anneal_w,
+                "pretrain_params": [
+                    p_p
+                    for p_n, p_p in org_model.named_parameters()
+                    if not any(nd in p_n for nd in no_decay) and any(ap in p_n for ap in anneal_param)
+                ],
+            },
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if not any(nd in n for nd in no_decay) and not any(ap in n for ap in anneal_param)
+                ],
+                "weight_decay": training_args.weight_decay,
+                "anneal_w": 0.0,
+                "pretrain_params": [
+                    p_p
+                    for p_n, p_p in org_model.named_parameters()
+                    if not any(nd in p_n for nd in no_decay) and not any(ap in p_n for ap in anneal_param)
+                ],
+            },
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if any(nd in n for nd in no_decay) and any(ap in n for ap in anneal_param)
+                ],
+                "weight_decay": 0.0,
+                "anneal_w": training_args.recadam_anneal_w,
+                "pretrain_params": [
+                    p_p
+                    for p_n, p_p in org_model.named_parameters()
+                    if any(nd in p_n for nd in no_decay) and any(ap in p_n for ap in anneal_param)
+                ],
+            },
+            {
+                "params": [
+                    p
+                    for n, p in model.named_parameters()
+                    if any(nd in n for nd in no_decay) and not any(ap in n for ap in anneal_param)
+                ],
+                "weight_decay": 0.0,
+                "anneal_w": 0.0,
+                "pretrain_params": [
+                    p_p
+                    for p_n, p_p in org_model.named_parameters()
+                    if any(nd in p_n for nd in no_decay) and not any(ap in p_n for ap in anneal_param)
+                ],
+            },
+        ]
 
-    optimizer = RecAdam(
-        optimizer_grouped_parameters,
-        betas=(training_args.adam_beta1, training_args.adam_beta2),
-        eps=training_args.adam_epsilon,
-        lr=training_args.learning_rate,
-        weight_decay=training_args.weight_decay,
-        anneal_fun="constant",
-        anneal_lamb=training_args.recadam_anneal_lamb,
-    )
+        optimizer = RecAdam(
+            optimizer_grouped_parameters,
+            betas=(training_args.adam_beta1, training_args.adam_beta2),
+            eps=training_args.adam_epsilon,
+            lr=training_args.learning_rate,
+            weight_decay=training_args.weight_decay,
+            anneal_fun="constant",
+            anneal_lamb=training_args.recadam_anneal_lambw,
+        )
+    else:
+        optimizer = None
 
     # schedular = get_scheduler(training_args.lr_scheduler_type, optimizer)
 
