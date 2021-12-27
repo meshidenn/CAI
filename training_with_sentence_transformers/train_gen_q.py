@@ -49,7 +49,7 @@ data_path = os.path.join(args.data_path, dataset)
 corpus, gen_queries, gen_qrels = GenericDataLoader(data_path, prefix=prefix).load(split="train")
 
 #### Provide any HuggingFace model and fine-tune from scratch
-word_embedding_model = models.MLMTransformer(args.model_name, max_seq_length=args.max_seq_length)
+word_embedding_model = models.MLMTransformer(args.model_name, max_seq_lengt h=args.max_seq_length)
 model = SentenceTransformer(modules=[word_embedding_model])
 
 #### Or provide already fine-tuned sentence-transformer model
@@ -78,7 +78,7 @@ model_save_path = os.path.join(data_path, "output", "GenQ-{}".format(dataset))
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params
-num_epochs = 1
+num_epochs = args.epochs
 evaluation_steps = 5000
 warmup_steps = int(len(train_samples) * num_epochs / retriever.batch_size * 0.1)
 

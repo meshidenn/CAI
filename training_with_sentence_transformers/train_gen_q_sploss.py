@@ -25,20 +25,9 @@ parser.add_argument("--max_seq_length", default=300, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
 parser.add_argument("--lambda_d", default=0.0008, type=float)
 parser.add_argument("--lambda_q", default=0.0006, type=float)
-parser.add_argument("--max_passages", default=0, type=int)
 parser.add_argument("--epochs", default=30, type=int)
-parser.add_argument("--pooling", default="mean")
-parser.add_argument(
-    "--negs_to_use",
-    default=None,
-    help="From which systems should negatives be used ? Multiple systems seperated by comma. None = all",
-)
-parser.add_argument("--warmup_steps", default=1000, type=int)
 parser.add_argument("--lr", default=2e-5, type=float)
-parser.add_argument("--num_negs_per_system", default=5, type=int)
-parser.add_argument("--use_pre_trained_model", default=False, action="store_true")
-parser.add_argument("--use_all_queries", default=False, action="store_true")
-parser.add_argument("--ce_score_margin", default=3.0, type=float)
+
 args = parser.parse_args()
 #### /print debug information to stdout
 
@@ -83,8 +72,7 @@ else:
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params
-# num_epochs = 1
-# evaluation_steps = 5000
+
 warmup_steps = int(len(train_samples) * args.epochs / retriever.batch_size * 0.1)
 
 retriever.fit(
@@ -93,6 +81,7 @@ retriever.fit(
     epochs=args.epochs,
     output_path=model_save_path,
     warmup_steps=warmup_steps,
+    ptimizer_params={"lr": args.lr},
     use_amp=True,
     checkpoint_path=model_save_path,
 )
