@@ -20,7 +20,6 @@ parser.add_argument("--data_path")
 parser.add_argument("--dataset")
 parser.add_argument("--out_suffix", default="")
 parser.add_argument("--train_batch_size", default=64, type=int)
-parser.add_argument("--max_seq_length", default=300, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
 parser.add_argument("--epochs", default=30, type=int)
 parser.add_argument("--lr", default=2e-5, type=float)
@@ -36,7 +35,7 @@ data_path = os.path.join(args.data_path, dataset)
 corpus, gen_queries, gen_qrels = GenericDataLoader(data_path, prefix=prefix).load(split="train")
 
 #### Or provide already fine-tuned sentence-transformer model
-model = SentenceTransformer(args.model_name, max_seq_length=args.max_seq_length)
+model = SentenceTransformer(args.model_name)
 
 #### Provide any sentence-transformers model path
 retriever = TrainRetriever(model=model, batch_size=64)
@@ -58,9 +57,9 @@ except ValueError:
 
 #### Provide model save path
 if args.out_suffix:
-    model_save_path = os.path.join(data_path, "output", "GenQ-{}-{}".format(args.out_suffix, dataset))
+    model_save_path = os.path.join(data_path, "output", "GenQ-dense-{}".format(args.out_suffix))
 else:
-    model_save_path = os.path.join(data_path, "output", "GenQ-{}".format(dataset))
+    model_save_path = os.path.join(data_path, "output", "GenQ-dense")
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params

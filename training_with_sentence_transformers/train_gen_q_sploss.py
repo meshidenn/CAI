@@ -21,7 +21,7 @@ parser.add_argument("--data_path")
 parser.add_argument("--dataset")
 parser.add_argument("--out_suffix", default="")
 parser.add_argument("--train_batch_size", default=64, type=int)
-parser.add_argument("--max_seq_length", default=300, type=int)
+parser.add_argument("--max_seq_length", default=512, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
 parser.add_argument("--lambda_d", default=0.0008, type=float)
 parser.add_argument("--lambda_q", default=0.0006, type=float)
@@ -80,7 +80,7 @@ retriever.fit(
     evaluator=ir_evaluator,
     epochs=args.epochs,
     output_path=model_save_path,
-    warmup_steps=warmup_steps,
+    warmup_steps=warmup_steps,p
     ptimizer_params={"lr": args.lr},
     use_amp=True,
     checkpoint_path=model_save_path,
