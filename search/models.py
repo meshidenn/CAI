@@ -18,6 +18,29 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+class BEIRSbert:
+    def __init__(self, model, tokenizer, max_length=256, sep=" "):
+        self.max_length = max_length
+        self.tokenizer = tokenizer
+        self.q_model = model
+        self.doc_model = model
+
+        self.sep = sep
+
+    def encode_queries(
+        self, queries: List[str], batch_size: int = 16, **kwargs
+    ) -> Union[List[Tensor], np.ndarray, Tensor]:
+        return self.q_model.encode(queries, batch_size=batch_size, **kwargs)
+
+    def encode_corpus(
+        self, corpus: List[Dict[str, str]], batch_size: int = 8, **kwargs
+    ) -> Union[List[Tensor], np.ndarray, Tensor]:
+        sentences = [
+            (doc["title"] + self.sep + doc["text"]).strip() if "title" in doc else doc["text"].strip() for doc in corpus
+        ]
+        return self.doc_model.encode(sentences, batch_size=batch_size, **kwargs)
+
+
 class BEIRSpladeModelIDF:
     def __init__(self, model, tokenizer, idf, max_length=256, sqrt=True):
         self.max_length = max_length
