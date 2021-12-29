@@ -570,7 +570,7 @@ def main():
             lr=training_args.learning_rate,
             weight_decay=training_args.weight_decay,
             anneal_fun="constant",
-            anneal_lamb=training_args.recadam_anneal_lambw,
+            anneal_lamb=training_args.recadam_anneal_lamb_w,
         )
     else:
         optimizer = None
