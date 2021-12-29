@@ -503,7 +503,7 @@ def main():
 
     # bias or layernorm is not applied to weight_decay
     # annewal_w is applied to parameter which include model name,
-    if training_args.recadam < 1.0 or training_args.reg:
+    if training_args.recadam_anneal_lamb < 1.0 or training_args.reg:
         optimizer_grouped_parameters = [
             {
                 "params": [

@@ -66,9 +66,9 @@ except ValueError:
 
 #### Provide model save path
 if args.out_suffix:
-    model_save_path = os.path.join(data_path, "output", "GenQ-sploss-{}-{}".format(args.out_suffix, dataset))
+    model_save_path = os.path.join(data_path, "output", "GenQ-splade-{}".format(args.out_suffix))
 else:
-    model_save_path = os.path.join(data_path, "output", "GenQ-sploss-{}".format(dataset))
+    model_save_path = os.path.join(data_path, "output", "GenQ-splade")
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params
@@ -80,8 +80,8 @@ retriever.fit(
     evaluator=ir_evaluator,
     epochs=args.epochs,
     output_path=model_save_path,
-    warmup_steps=warmup_steps,p
-    ptimizer_params={"lr": args.lr},
+    warmup_steps=warmup_steps,
+    optimizer_params={"lr": args.lr},
     use_amp=True,
     checkpoint_path=model_save_path,
 )
