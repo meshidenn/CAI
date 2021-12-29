@@ -127,6 +127,7 @@ class DataTrainingArguments:
     dataset_name: Optional[str] = field(
         default=None, metadata={"help": "The name of the dataset to use (via the datasets library)."}
     )
+    data_root_dir: Optional[str] = field(default=None, metadata={"help": ""})
     dataset_config_name: Optional[str] = field(
         default=None, metadata={"help": "The configuration name of the dataset to use (via the datasets library)."}
     )
@@ -201,7 +202,7 @@ class RegTrainingArguments(TrainingArguments):
     recadam_anneal_lamb: float = field(default=0.8)
 
 
-def choose_model(data_path, percent=0.05):
+def choose_model(data_path, model_path, percent=0.05):
     score_file = os.path.join(data_path, "tokenizer", "pre_tokenize", "raw", "scores.json")
     with open(score_file) as f:
         scores = json.load(f)
@@ -214,7 +215,7 @@ def choose_model(data_path, percent=0.05):
             break
 
     target_model_vocab = num_vocabs[i + 1]
-    target_model_path = os.path.join(data_path, "new_model", "init_model", "pre_tokenize", f"{target_model_vocab}")
+    target_model_path = os.path.join(model_path, "init_model", "pre_tokenize", f"{target_model_vocab}")
     return target_model_path, target_model_vocab
 
 
@@ -336,7 +337,7 @@ def main():
     # The .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
 
-    model_name_or_path, vocab_num = choose_model(model_args.model_name_or_path)
+    model_name_or_path, vocab_num = choose_model(data_args.data_root_dir, model_args.model_name_or_path)
     if training_args.reg:
         training_args.output_dir = os.path.join(
             training_args.output_dir, f"{vocab_num}-{training_args.recadam_anneal_lamb}"
