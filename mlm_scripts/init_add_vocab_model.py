@@ -12,7 +12,7 @@ def main(args):
     org_tokenizer = AutoTokenizer.from_pretrained(args.org_model_path)
     org_model = AutoModelForMaskedLM.from_pretrained(args.org_model_path)
     new_tokenizer = DistilBertTokenizerFast(os.path.join(args.new_tokenizer_path, "vocab.txt"))
-    new_model = AutoModelForMaskedLM.from_pretrained(args.splade_path)
+    new_model = AutoModelForMaskedLM.from_pretrained(args.org_model_path)
 
     vocab_diff = set(new_tokenizer.get_vocab().keys()) - set(org_tokenizer.get_vocab().keys())
     new_model.resize_token_embeddings(len(new_tokenizer))
