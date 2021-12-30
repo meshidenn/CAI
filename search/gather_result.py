@@ -12,11 +12,12 @@ def main(args):
     this_dataset_result = {}
 
     for result_path in all_result_path:
+        print(result_path)
         with result_path.open() as f:
             results = json.load(f)
         row_name_header = str(result_path.parent).replace(args.root_dir, "").replace("/", "-")
         for param, result in results.items():
-            row_name = "-".join(row_name_header, param)
+            row_name = "-".join(r(ow_name_header, param))
             this_dataset_result[row_name] = result
 
     df_this_dataset_result = pd.DaraFrame(this_dataset_result)
