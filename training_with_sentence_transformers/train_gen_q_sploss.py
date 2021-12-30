@@ -66,9 +66,9 @@ except ValueError:
 
 #### Provide model save path
 if args.out_suffix:
-    model_save_path = os.path.join(data_path, "output", "GenQ-splade-{}".format(args.out_suffix))
+    model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ-{}".format(args.out_suffix))
 else:
-    model_save_path = os.path.join(data_path, "output", "GenQ-splade")
+    model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ")
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params
