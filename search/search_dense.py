@@ -43,12 +43,12 @@ def main(args):
     dataset = args.dataset
     data_path = os.path.join(args.data_dir, dataset)
 
-    out_path = os.path.join(data_path, "result", args.out_name, "result.txt")
+    out_path = os.path.join(data_path, "result", args.out_name, "result.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
     idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     calc_models = {"org": BEIRSbert(model, tokenizer)}
 
-    out_results = []
+    out_results = {}
     for k in calc_models:
         beir_splade = calc_models[k]
         dres = DRES(beir_splade)
@@ -57,13 +57,12 @@ def main(args):
         ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, [1, 10, 100, 1000])
         results2 = EvaluateRetrieval.evaluate_custom(qrels, results, [1, 10, 100, 1000], metric="r_cap")
         res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"], "R_cap@100": results2["R_cap@100"]}
-        out_results.append((k, dataset, res))
+        out_results[k] = res
         print("{} model result for {}:".format(k, dataset), res, flush=True)
 
     os.makedirs(os.path.join(data_path, "result", args.out_name), exist_ok=True)
     with open(out_path, "w") as f:
-        for o in out_results:
-            print("{} model result for {}:".format(o[0], o[1]), o[2], file=f)
+        json.dump(out_results, f)
 
 
 if __name__ == "__main__":
