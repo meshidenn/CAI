@@ -17,7 +17,7 @@ def main(args):
             results = json.load(f)
         row_name_header = str(result_path.parent).replace(args.root_dir, "").replace("/", "-")
         for param, result in results.items():
-            row_name = "-".join(r(ow_name_header, param))
+            row_name = "-".join((row_name_header, param))
             this_dataset_result[row_name] = result
 
     df_this_dataset_result = pd.DaraFrame(this_dataset_result)
