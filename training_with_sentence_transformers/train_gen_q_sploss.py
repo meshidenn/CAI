@@ -4,6 +4,7 @@ from beir.generation import QueryGenerator as QGen
 from beir.generation.models import QGenModel
 from beir.retrieval.train import TrainRetriever
 from sentence_transformers import SentenceTransformer
+from transformers import set_seed
 
 import argparse
 import pathlib, os
@@ -27,9 +28,11 @@ parser.add_argument("--lambda_d", default=0.0008, type=float)
 parser.add_argument("--lambda_q", default=0.0006, type=float)
 parser.add_argument("--epochs", default=30, type=int)
 parser.add_argument("--lr", default=2e-5, type=float)
+parser.add_argument("--seed", default=42)
 
 args = parser.parse_args()
-#### /print debug information to stdout
+
+set_seed(args.seed)
 
 #### Download nfcorpus.zip dataset and unzip the dataset
 dataset = args.dataset
