@@ -20,7 +20,7 @@ def main(args):
             row_name = "-".join((row_name_header, param))
             this_dataset_result[row_name] = result
 
-    df_this_dataset_result = pd.DataFrame(this_dataset_result)
+    df_this_dataset_result = pd.DataFrame(this_dataset_result).T
     out_path = root_dir / "all_result.csv"
     df_this_dataset_result.to_csv(out_path)
 
