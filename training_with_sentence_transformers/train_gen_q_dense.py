@@ -41,7 +41,7 @@ corpus, gen_queries, gen_qrels = GenericDataLoader(data_path, prefix=prefix).loa
 model = SentenceTransformer(args.model_name)
 
 #### Provide any sentence-transformers model path
-retriever = TrainRetriever(model=model, batch_size=64)
+retriever = TrainRetriever(model=model, batch_size=args.train_batch_size)
 
 #### Prepare training samples
 train_samples = retriever.load_train(corpus, gen_queries, gen_qrels)
