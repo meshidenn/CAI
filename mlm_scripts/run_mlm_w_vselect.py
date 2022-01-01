@@ -338,6 +338,7 @@ def main():
     # download model & vocab.
 
     model_name_or_path, vocab_num = choose_model(data_args.data_root_dir, model_args.model_name_or_path)
+
     if training_args.reg:
         training_args.output_dir = os.path.join(
             training_args.output_dir, f"{vocab_num}-{training_args.recadam_anneal_lamb}"

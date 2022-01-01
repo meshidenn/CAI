@@ -11,6 +11,7 @@ import pathlib, os
 import logging
 import models
 import losses
+import json
 
 #### Just some code to print debug information to stdout
 logging.basicConfig(
@@ -21,6 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--data_path")
 parser.add_argument("--dataset")
 parser.add_argument("--out_suffix", default="")
+parser.add_argument("--with_weight", default=False, type=bool)
 parser.add_argument("--train_batch_size", default=64, type=int)
 parser.add_argument("--max_seq_length", default=512, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
@@ -42,14 +44,21 @@ data_path = os.path.join(args.data_path, dataset)
 #### Training on Generated Queries ####
 corpus, gen_queries, gen_qrels = GenericDataLoader(data_path, prefix=prefix).load(split="train")
 
+#### Provide any sentence-transformers model path
+if args.with_weight:
+    weight_path = os.path.join(args.model_name, "weights.json")
+    with open(weight_path) as f:
+        word_weights = json.load(f)
+else:
+    word_weights = None
+
+
 #### Provide any HuggingFace model and fine-tune from scratch
-word_embedding_model = models.MLMTransformer(args.model_name, max_seq_length=args.max_seq_length)
+word_embedding_model = models.MLMTransformer(args.model_name, max_seq_length=args.max_seq_length, weights=word_weights)
 model = SentenceTransformer(modules=[word_embedding_model])
 
 #### Or provide already fine-tuned sentence-transformer model
 # model = SentenceTransformer("msmarco-distilbert-base-v3")
-
-#### Provide any sentence-transformers model path
 retriever = TrainRetriever(model=model, batch_size=args.train_batch_size)
 
 #### Prepare training samples
@@ -69,9 +78,16 @@ except ValueError:
 
 #### Provide model save path
 if args.out_suffix:
-    model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ-{}".format(args.out_suffix))
+    if args.with_weight:
+        model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ-{}-{}".format(args.out_suffix, "weight"))
+    else:
+        model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ-{}".format(args.out_suffix))
 else:
-    model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ")
+    if args.with_weight:
+        model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ-weight")
+    else:
+        model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ")
+
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params

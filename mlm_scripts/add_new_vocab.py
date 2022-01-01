@@ -18,6 +18,8 @@ from tokenizers.processors import TemplateProcessing
 
 
 CODE_REMOVER = re.compile("[!\"#$%&'\\\\()*+,-./:;<=>?@[\\]^_`{|}~「」〔〕“”〈〉『』【】＆＊・（）＄＠。、？！｀＋￥％0-9]+")
+DF_FILE_NAME = "df.json"
+IDF_FILE_NAME = "weights.json"
 
 
 def calc_score_diff(freq1, freq2):
@@ -30,25 +32,33 @@ def calc_score_diff(freq1, freq2):
     return (score2 - score1) / score1
 
 
-def calc_score(texts, present_tokenizer):
+def calc_score_and_weight(texts, present_tokenizer):
     prob = Counter()
+    all_df = Counter()
     tk_docs = []
     for text in tqdm(texts):
         output = present_tokenizer.tokenize(text)
+        this_df = list(set(output))
         tk_docs.append(output)
         prob.update(output)
+        all_df.update(this_df)
 
     v_prob = list(prob.values())
     N = np.sum(v_prob)
     for k in prob:
         prob[k] /= N
 
+    all_idf = {}
+    ND = len(texts)
+    for v, df in all_df.items():
+        all_idf[v] = np.log(ND / df)
+
     score = []
     for tk_doc in tqdm(tk_docs):
         score.append(np.sum([np.log(prob[t]) for t in tk_doc]))
 
     score = np.mean(score)
-    return score
+    return score, all_df, all_idf
 
 
 def remove_partial_vocab(add_vocabs, present_vocabs, increment, remover):
@@ -101,10 +111,20 @@ def build_target_size_vocab(increment, texts, present_tokenizer, remover=True):
     return vocab_file, prev_vocab_size
 
 
+def weight_save(outpath, df, idf):
+    df_path = os.path.join(outpath, DF_FILE_NAME)
+    idf_path = os.path.join(outpath, IDF_FILE_NAME)
+
+    with open(df_path, "w") as f:
+        json.dump(df, f)
+    with open(idf_path, "w") as f:
+        json.dump(idf, f)
+
+
 def main(args):
     input_file = Path(args.input)
     out_dir = Path(args.output)
-    present_tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+    present_tokenizer = DistilBertTokenizer.from_pretrained(args.tokenizer_path)
     texts = []
 
     with input_file.open(mode="r") as f:
@@ -133,17 +153,20 @@ def main(args):
     scores = dict()
     increment = 1000
     vocab_size = len(present_tokenizer.get_vocab())
-    score = calc_score(texts, present_tokenizer)
+    score, df, idf = calc_score_and_weight(texts, present_tokenizer)
+    weight_save(args.tokenizer_path, df, idf)
     scores[vocab_size] = score
 
     for i in range(20):
         vocab_file, prev_vocab_size = build_target_size_vocab(increment, texts, present_tokenizer, args.remover)
         present_tokenizer = DistilBertTokenizer(vocab_file.name, do_lower_case=True)
         update_vocab_size = len(present_tokenizer.vocab)
-        score = calc_score(texts, present_tokenizer)
+        score, df, idf = calc_score_and_weight(texts, present_tokenizer)
         scores[update_vocab_size] = score
         tk_outpath = os.path.join(out_dir, str(update_vocab_size))
         present_tokenizer.save_pretrained(tk_outpath)
+        weight_save(tk_outpath, df, idf)
+
         print(update_vocab_size, prev_vocab_size)
         if update_vocab_size - prev_vocab_size < increment:
             break
@@ -157,6 +180,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--input")
     parser.add_argument("--output")
+    parser.add_argument("--tokenizer_path")
     parser.add_argument("--preproc", help="raw or pre_tokenize")
     parser.add_argument("--remover", action="store_true")
 

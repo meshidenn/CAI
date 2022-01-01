@@ -10,6 +10,7 @@ import argparse
 import pathlib, os
 import logging
 import models
+import json
 
 #### Just some code to print debug information to stdout
 logging.basicConfig(
@@ -20,7 +21,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--data_path")
 parser.add_argument("--dataset")
 parser.add_argument("--out_suffix", default="")
+parser.add_argument("--with_weight", default=False, type=bool)
 parser.add_argument("--train_batch_size", default=64, type=int)
+parser.add_argument("--max_seq_length", default=512, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
 parser.add_argument("--epochs", default=30, type=int)
 parser.add_argument("--lr", default=2e-5, type=float)
@@ -38,7 +41,22 @@ data_path = os.path.join(args.data_path, dataset)
 corpus, gen_queries, gen_qrels = GenericDataLoader(data_path, prefix=prefix).load(split="train")
 
 #### Or provide already fine-tuned sentence-transformer model
-model = SentenceTransformer(args.model_name)
+word_embedding_model = models.Transformer(args.model_name, max_seq_length=args.max_seq_length)
+
+vocab = word_embedding_model.tokenizer.get_vocab()
+pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension())
+
+if args.with_weight:
+    weight_path = os.path.join(args.model_name, "weights.json")
+    with open(weight_path) as f:
+        word_weights = json.load(f)
+
+    unknown_word_weight = 1.0
+
+    word_weights = models.WordWeights(vocab=vocab, word_weights=word_weights, unknown_word_weight=unknown_word_weight)
+    model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
+else:
+    model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
 #### Provide any sentence-transformers model path
 retriever = TrainRetriever(model=model, batch_size=args.train_batch_size)
@@ -60,9 +78,15 @@ except ValueError:
 
 #### Provide model save path
 if args.out_suffix:
-    model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ-{}".format(args.out_suffix))
+    if args.with_weight:
+        model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ-{}-{}".format(args.out_suffix, "weight"))
+    else:
+        model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ-{}".format(args.out_suffix))
 else:
-    model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ")
+    if args.with_weight:
+        model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ-weight")
+    else:
+        model_save_path = os.path.join(data_path, "new_model", "tas-b", "GenQ")
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params
