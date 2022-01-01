@@ -37,7 +37,7 @@ def calc_score_and_weight(texts, present_tokenizer):
     all_df = Counter()
     tk_docs = []
     for text in tqdm(texts):
-        output = present_tokenizer.tokenize(text)
+        output = present_tokenizer(text)["input_ids"]
         this_df = list(set(output))
         tk_docs.append(output)
         prob.update(output)
