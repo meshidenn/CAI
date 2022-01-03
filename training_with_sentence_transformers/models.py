@@ -206,7 +206,7 @@ class MLMTransformer(nn.Module):
             with open(os.path.join(output_path, IDF_FILE_NAME), "w") as fOut:
                 weight = {}
                 for i, w in enumerate(self.vocab_weight):
-                    weight[i] = w
+                    weight[i] = w.item()
                 json.dump(weight, fOut, indent=2)
 
     @staticmethod
