@@ -38,17 +38,20 @@ def main(args):
     model = Splade(args.model_type_or_dir)
     model.eval()
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model_type_or_dir)
+    tokenizer = model.tokenizer
     dataset = args.dataset
     data_path = os.path.join(args.data_dir, dataset)
 
     out_path = os.path.join(data_path, "result", args.out_name, "result.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
     idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
+    # calc_models = {
+    #     "org": BEIRSpladeModel(model, tokenizer),
+    #     "idf": BEIRSpladeModelIDF(model, tokenizer, idf, sqrt=False),
+    #     "idf_sqrt": BEIRSpladeModelIDF(model, tokenizer, idf),
+    # }
     calc_models = {
         "org": BEIRSpladeModel(model, tokenizer),
-        "idf": BEIRSpladeModelIDF(model, tokenizer, idf, sqrt=False),
-        "idf_sqrt": BEIRSpladeModelIDF(model, tokenizer, idf),
     }
 
     out_results = {}

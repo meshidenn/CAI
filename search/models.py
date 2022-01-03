@@ -9,7 +9,7 @@ import torch
 from numpy import ndarray
 from torch import Tensor, nn
 from tqdm.autonotebook import trange
-from transformers import AutoModelForMaskedLM
+from transformers import AutoModelForMaskedLM, AutoTokenizer
 from transformers.file_utils import ModelOutput
 
 try:
@@ -99,13 +99,12 @@ class BEIRSpladeModel:
 class Splade(nn.Module):
     def __init__(self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, **kwargs):
         super().__init__()
-        if os.path.exists(os.path.join(model_type_or_dir, "pytorch_model.bin")):
-            self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
-        elif os.path.exists(os.path.join(model_type_or_dir, "0_MLMTransformer", "pytorch_model.bin")):
+        if os.path.exists(os.path.join(model_type_or_dir, "0_MLMTransformer")):
+            print("path", model_type_or_dir)
             model_type_or_dir = os.path.join(model_type_or_dir, "0_MLMTransformer")
-            self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
-        else:
-            self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
+
+        self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_type_or_dir)
 
         weights_path = os.path.join(model_type_or_dir, IDF_FILE_NAME)
         if os.path.exists(weights_path):
