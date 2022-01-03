@@ -80,14 +80,14 @@ except ValueError:
 #### Provide model save path
 if args.out_suffix:
     if args.with_weight:
-        model_save_path = os.path.join(data_path, "new_model", "sploss", "GenQ-{}-{}".format(args.out_suffix, "weight"))
+        model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ-{}-{}".format(args.out_suffix, "weight"))
     else:
-        model_save_path = os.path.join(data_path, "new_model", "sploss", "GenQ-{}".format(args.out_suffix))
+        model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ-{}".format(args.out_suffix))
 else:
     if args.with_weight:
-        model_save_path = os.path.join(data_path, "new_model", "sploss", "GenQ-weight")
+        model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ-weight")
     else:
-        model_save_path = os.path.join(data_path, "new_model", "sploss", "GenQ")
+        model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ")
 
 os.makedirs(model_save_path, exist_ok=True)
 
