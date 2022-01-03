@@ -22,7 +22,7 @@ def main(args):
 
     df_this_dataset_result = pd.DataFrame(this_dataset_result).T
     out_path = root_dir / "all_result.csv"
-    df_this_dataset_result.to_csv(out_path)
+    df_this_dataset_result.sort_index().to_csv(out_path)
 
 
 if __name__ == "__main__":
