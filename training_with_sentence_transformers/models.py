@@ -33,7 +33,6 @@ class Splade_Pooling(nn.Module):
         sentence_embedding = torch.max(
             torch.log(1 + torch.relu(token_embeddings)) * attention_mask.unsqueeze(-1), dim=1
         ).values
-        print((torch.log(1 + torch.relu(token_embeddings)) * attention_mask.unsqueeze(-1)).shape)
         features.update({"sentence_embedding": sentence_embedding})
         return features
 
@@ -146,7 +145,7 @@ class MLMTransformer(nn.Module):
         features = self.pooling(features)
 
         if self.vocab_weight is not None:
-            features["sentence_embedding"] *= self.vocab_weight
+            features["sentence_embedding"] *= self.vocab_weight.unsqueeze(0)
 
         return features
 
