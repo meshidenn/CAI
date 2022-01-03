@@ -6,6 +6,7 @@ from beir.retrieval.train import TrainRetriever
 from sentence_transformers import SentenceTransformer, losses
 from sentence_transformers.models import Transformer, WordWeights, Pooling
 from transformers import set_seed
+from distutils.util import strtobool
 
 import argparse
 import pathlib, os
@@ -21,7 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--data_path")
 parser.add_argument("--dataset")
 parser.add_argument("--out_suffix", default="")
-parser.add_argument("--with_weight", default=False, type=bool)
+parser.add_argument("--with_weight", default=False, type=strtobool)
 parser.add_argument("--train_batch_size", default=64, type=int)
 parser.add_argument("--max_seq_length", default=512, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
