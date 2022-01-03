@@ -99,16 +99,16 @@ class BEIRSpladeModel:
 class Splade(nn.Module):
     def __init__(self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, **kwargs):
         super().__init__()
-        if os.path.exist(os.path.join(model_type_or_dir, "pytorch_model.bin")):
+        if os.path.exists(os.path.join(model_type_or_dir, "pytorch_model.bin")):
             self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
-        elif os.path.exist(os.path.join(model_type_or_dir, "0_MLMTransformer", "pytorch_model.bin")):
+        elif os.path.exists(os.path.join(model_type_or_dir, "0_MLMTransformer", "pytorch_model.bin")):
             model_type_or_dir = os.path.join(model_type_or_dir, "0_MLMTRansformer")
             self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
         else:
             self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
 
         weights_path = os.path.join(model_type_or_dir, IDF_FILE_NAME)
-        if os.path.exist(weights_path):
+        if os.path.exists(weights_path):
             with open(weights_path) as f:
                 weights = json.load(f)
 
