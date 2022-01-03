@@ -3,8 +3,8 @@ from beir.datasets.data_loader import GenericDataLoader
 from beir.generation import QueryGenerator as QGen
 from beir.generation.models import QGenModel
 from beir.retrieval.train import TrainRetriever
-from beir.retrieval.models import Transformer, WordWeights, Pooling
 from sentence_transformers import SentenceTransformer, losses
+from sentence_transformers.models import Transformer, WordWeights, Pooling
 from transformers import set_seed
 
 import argparse

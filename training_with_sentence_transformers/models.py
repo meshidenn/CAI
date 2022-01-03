@@ -93,7 +93,7 @@ class MLMTransformer(nn.Module):
         )
         self.pooling = torch.nn.DataParallel(Splade_Pooling(self.get_word_embedding_dimension()))
 
-        if weights:
+        if weights is not None:
             vocab_weight = torch.ones(config.vocab_size, 1)
             for i, w in weights.items():
                 vocab_weight[int(i), 0] = w
@@ -144,7 +144,7 @@ class MLMTransformer(nn.Module):
 
         features = self.pooling(features)
 
-        if self.vocab_weight:
+        if self.vocab_weight is not None:
             features *= self.vocab_weight
 
         return features
@@ -202,7 +202,7 @@ class MLMTransformer(nn.Module):
         with open(os.path.join(output_path, "sentence_bert_config.json"), "w") as fOut:
             json.dump(self.get_config_dict(), fOut, indent=2)
 
-        if self.vocab_weight:
+        if self.vocab_weight is not None:
             with open(os.path.join(output_path, IDF_FILE_NAME), "w") as fOut:
                 weight = {}
                 for i, w in enumerate(self.vocab_weight):
