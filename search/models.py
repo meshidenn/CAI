@@ -112,7 +112,7 @@ class Splade(nn.Module):
             with open(weights_path) as f:
                 weights = json.load(f)
 
-            vocab_weight = torch.ones(self.transfomrer.config.vocab_size)
+            vocab_weight = torch.ones(self.transformer.config.vocab_size)
             for i, w in weights.items():
                 vocab_weight[int(i)] = w
 
