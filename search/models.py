@@ -1,3 +1,5 @@
+import os
+import json
 import logging
 from typing import List, Dict, Union, Optional
 from dataclasses import dataclass
@@ -16,6 +18,9 @@ try:
 except ImportError:
     print("Import Error: could not load sentence_transformers... proceeding")
 logger = logging.getLogger(__name__)
+
+
+IDF_FILE_NAME = "weights.json"
 
 
 class BEIRSbert:
@@ -94,7 +99,27 @@ class BEIRSpladeModel:
 class Splade(nn.Module):
     def __init__(self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, **kwargs):
         super().__init__()
-        self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
+        if os.path.exist(os.path.join(model_type_or_dir, "pytorch_model.bin")):
+            self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
+        elif os.path.exist(os.path.join(model_type_or_dir, "0_MLMTransformer", "pytorch_model.bin")):
+            model_type_or_dir = os.path.join(model_type_or_dir, "0_MLMTRansformer")
+            self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
+        else:
+            self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
+
+        weights_path = os.path.join(model_type_or_dir, IDF_FILE_NAME)
+        if os.path.exist(weights_path):
+            with open(weights_path) as f:
+                weights = json.load(f)
+
+            vocab_weight = torch.ones(self.transfomrer.config.vocab_size)
+            for i, w in weights.items():
+                vocab_weight[int(i)] = w
+
+            vocab_weight = torch.sqrt(vocab_weight)
+            self.vocab_weights = nn.Parameter(vocab_weight)
+        else:
+            self.vocab_weights = None
         self.loss_func = nn.CrossEntropyLoss()
         self.lambda_d = lambda_d
         self.lambda_q = lambda_q
@@ -122,7 +147,11 @@ class Splade(nn.Module):
 
     def encode(self, **kwargs):
         out = self.transformer(**kwargs)["logits"]  # output (logits) of MLM head, shape (bs, pad_len, voc_size)
-        return torch.max(torch.log(1 + torch.relu(out)) * kwargs["attention_mask"].unsqueeze(-1), dim=1).values
+        vec = torch.max(torch.log(1 + torch.relu(out)) * kwargs["attention_mask"].unsqueeze(-1), dim=1).values
+        if self.vocab_weights is not None:
+            vec *= self.vocab_weights
+
+        return vec
 
     def _text_length(self, text: Union[List[int], List[List[int]]]):
         """helper function to get the length for the input text. Text can be either
