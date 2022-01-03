@@ -94,9 +94,9 @@ class MLMTransformer(nn.Module):
         self.pooling = torch.nn.DataParallel(Splade_Pooling(self.get_word_embedding_dimension()))
 
         if weights is not None:
-            vocab_weight = torch.ones(config.vocab_size, 1)
+            vocab_weight = torch.ones(config.vocab_size)
             for i, w in weights.items():
-                vocab_weight[int(i), 0] = w
+                vocab_weight[int(i)] = w
 
             vocab_weight = torch.sqrt(vocab_weight)
 
