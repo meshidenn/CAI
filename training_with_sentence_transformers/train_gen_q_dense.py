@@ -3,13 +3,13 @@ from beir.datasets.data_loader import GenericDataLoader
 from beir.generation import QueryGenerator as QGen
 from beir.generation.models import QGenModel
 from beir.retrieval.train import TrainRetriever
+from beir.retrieval.models import Transformer, WordWeights, Pooling
 from sentence_transformers import SentenceTransformer, losses
 from transformers import set_seed
 
 import argparse
 import pathlib, os
 import logging
-import models
 import json
 
 #### Just some code to print debug information to stdout
@@ -41,10 +41,10 @@ data_path = os.path.join(args.data_path, dataset)
 corpus, gen_queries, gen_qrels = GenericDataLoader(data_path, prefix=prefix).load(split="train")
 
 #### Or provide already fine-tuned sentence-transformer model
-word_embedding_model = models.Transformer(args.model_name, max_seq_length=args.max_seq_length)
+word_embedding_model = Transformer(args.model_name, max_seq_length=args.max_seq_length)
 
 vocab = word_embedding_model.tokenizer.get_vocab()
-pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension())
+pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
 
 if args.with_weight:
     weight_path = os.path.join(args.model_name, "weights.json")
@@ -53,7 +53,7 @@ if args.with_weight:
 
     unknown_word_weight = 1.0
 
-    word_weights = models.WordWeights(vocab=vocab, word_weights=word_weights, unknown_word_weight=unknown_word_weight)
+    word_weights = WordWeights(vocab=vocab, word_weights=word_weights, unknown_word_weight=unknown_word_weight)
     model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
 else:
     model = SentenceTransformer(modules=[word_embedding_model, pooling_model])

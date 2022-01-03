@@ -9,6 +9,8 @@ import os
 import torch
 from torch import Tensor
 
+IDF_FILE_NAME = "weights.json"
+
 
 class Splade_Pooling(nn.Module):
     def __init__(self, word_embedding_dimension: int):
@@ -94,7 +96,9 @@ class MLMTransformer(nn.Module):
         if weights:
             vocab_weight = torch.ones(config.vocab_size, 1)
             for i, w in weights.items():
-                vocab_weight[int(i), 0] = torch.sqrt(w)
+                vocab_weight[int(i), 0] = w
+
+            vocab_weight = torch.sqrt(vocab_weight)
 
             self.vocab_weight = nn.Parameter(vocab_weight)
         else:
@@ -199,7 +203,7 @@ class MLMTransformer(nn.Module):
             json.dump(self.get_config_dict(), fOut, indent=2)
 
         if self.vocab_weight:
-            with open(os.path.join(output_path, "weight.json"), "w") as fOut:
+            with open(os.path.join(output_path, IDF_FILE_NAME), "w") as fOut:
                 weight = {}
                 for i, w in enumerate(self.vocab_weight):
                     weight[i] = w
@@ -224,7 +228,7 @@ class MLMTransformer(nn.Module):
         with open(sbert_config_path) as fIn:
             config = json.load(fIn)
 
-        weight_path = os.path.join(input_path, "weight.json")
+        weight_path = os.path.join(input_path, IDF_FILE_NAME)
         if os.path.exists(weight_path):
             with open(weight_path) as f:
                 weight = json.load(f)
