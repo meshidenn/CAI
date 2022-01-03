@@ -102,7 +102,7 @@ class Splade(nn.Module):
         if os.path.exists(os.path.join(model_type_or_dir, "pytorch_model.bin")):
             self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
         elif os.path.exists(os.path.join(model_type_or_dir, "0_MLMTransformer", "pytorch_model.bin")):
-            model_type_or_dir = os.path.join(model_type_or_dir, "0_MLMTRansformer")
+            model_type_or_dir = os.path.join(model_type_or_dir, "0_MLMTransformer")
             self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
         else:
             self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
