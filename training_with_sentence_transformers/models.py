@@ -145,7 +145,7 @@ class MLMTransformer(nn.Module):
         features = self.pooling(features)
 
         if self.vocab_weight is not None:
-            features *= self.vocab_weight
+            features["sentence_embedding"] *= self.vocab_weight
 
         return features
 
