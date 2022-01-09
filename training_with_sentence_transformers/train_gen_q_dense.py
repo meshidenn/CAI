@@ -29,7 +29,7 @@ parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
 parser.add_argument("--epochs", default=30, type=int)
 parser.add_argument("--lr", default=2e-5, type=float)
 parser.add_argument("--seed", default=42)
-parser.add_argument("--checkpoint_save_steps", default=2000)
+parser.add_argument("--checkpoint_save_steps", default=2000, type=int)
 args = parser.parse_args()
 
 set_seed(args.seed)
