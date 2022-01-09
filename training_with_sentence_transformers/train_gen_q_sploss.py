@@ -25,6 +25,7 @@ parser.add_argument("--dataset")
 parser.add_argument("--out_suffix", default="")
 parser.add_argument("--with_weight", default=False, type=strtobool)
 parser.add_argument("--train_batch_size", default=64, type=int)
+parser.add_argument("--dev_batch_size", default=32, type=int)
 parser.add_argument("--max_seq_length", default=512, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
 parser.add_argument("--lambda_d", default=0.0008, type=float)
@@ -74,6 +75,7 @@ try:
 
     #### Prepare dev evaluator
     ir_evaluator = retriever.load_ir_evaluator(dev_corpus, dev_queries, dev_qrels)
+    ir_evaluator.batch_size = args.dev_batch_size
 except ValueError:
     #### If no dev set is present evaluate using dummy evaluator
     ir_evaluator = retriever.load_dummy_evaluator()
