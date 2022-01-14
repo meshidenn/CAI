@@ -36,7 +36,7 @@ def calc_idf_and_doclen(corpus, tokenizer, sep):
 
 
 def main(args):
-    model = Splade(args.model_type_or_dir)
+    model = Splade(args.model_type_or_dir, load_weight=args.load_weight)
     model.eval()
 
     tokenizer = model.tokenizer
