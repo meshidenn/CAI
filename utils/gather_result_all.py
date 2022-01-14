@@ -8,7 +8,7 @@ import pandas as pd
 def main(args):
     root_dir = Path(args.root_dir)
 
-    all_result_path = root_dir.glob("**/all_result.csv")
+    all_result_path = root_dir.glob("**/da/all_result.csv")
 
     dataset_names = []
 
@@ -29,7 +29,7 @@ def main(args):
     all_columns = df_result_all.columns
     chunck_size = len(columns)
     multi_columns = []
-    for i, c in all_columns:
+    for i, c in enumerate(all_columns):
         dataset_index = i // chunck_size
         multi_columns.append((dataset_names[dataset_index], c))
 
