@@ -59,14 +59,6 @@ def main(args):
     df_result_all.columns = multi_columns
     df_result_all.to_csv("all_da_result.csv")
 
-    multi_columns_ind = []
-    for i, eic in enumerate(df_result_ndcg.columns):
-        multi_columns_ind.append((dataset_names[i], eic))
-
-    multi_columns_ind = pd.MultiIndex.from_tuples(multi_columns_ind)
-    df_result_ndcg_all.columns = multi_columns_ind
-    df_result_ndcg_all.to_csv("all_da_result_ndcg.csv")
-
     save_each_ind(df_result_ndcg_all, dataset_names, "all_da_result_ndcg.csv")
     save_each_ind(df_result_recall_all, dataset_names, "all_da_result_recall.csv")
     save_each_ind(df_result_recap_all, dataset_names, "all_da_result_recap.csv")
