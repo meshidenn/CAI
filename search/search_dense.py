@@ -43,7 +43,7 @@ def main(args):
 
         vocab = word_embedding_model.tokenizer.get_vocab()
         pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
-        weight_path = os.path.join(args.model_name, "weights.json")
+        weight_path = os.path.join(args.model_type_or_dir, "weights.json")
         with open(weight_path) as f:
             word_weights = json.load(f)
 
