@@ -44,7 +44,7 @@ def main(args):
 
     out_path = os.path.join(data_path, "result", args.out_name, "result.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
-    idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
+    # idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     # calc_models = {
     #     "org": BEIRSpladeModel(model, tokenizer),
     #     "idf": BEIRSpladeModelIDF(model, tokenizer, idf, sqrt=False),
