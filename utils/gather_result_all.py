@@ -47,9 +47,9 @@ def main(args):
     multi_columns = pd.MultiIndex.from_tuples(multi_columns)
     df_result_all.columns = multi_columns
     df_result_all.to_csv("all_da_result.csv")
-    df_result_all_ndcg.to_csv("all_da_result_ndcg.csv")
-    df_result_all_recall.to_csv("all_da_result_recall.csv")
-    df_result_all_recap.to_csv("all_da_result_recap.csv")
+    df_result_ndcg_all.to_csv("all_da_result_ndcg.csv")
+    df_result_recall_all.to_csv("all_da_result_recall.csv")
+    df_result_recap_all.to_csv("all_da_result_recap.csv")
 
 
 if __name__ == "__main__":
