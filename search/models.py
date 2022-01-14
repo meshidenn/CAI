@@ -97,7 +97,9 @@ class BEIRSpladeModel:
 
 
 class Splade(nn.Module):
-    def __init__(self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, load_weight=False, **kwargs):
+    def __init__(
+        self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, load_weight=False, weight_sqrt=False, **kwargs
+    ):
         super().__init__()
         if os.path.exists(os.path.join(model_type_or_dir, "0_MLMTransformer")):
             print("path", model_type_or_dir)
@@ -115,7 +117,8 @@ class Splade(nn.Module):
             for i, w in weights.items():
                 vocab_weight[int(i)] = w
 
-            vocab_weight = torch.sqrt(vocab_weight)
+            if weight_sqrt:
+                vocab_weight = torch.sqrt(vocab_weight)
             self.vocab_weights = nn.Parameter(vocab_weight)
         else:
             self.vocab_weights = None
