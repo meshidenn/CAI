@@ -1,3 +1,4 @@
+import argparse
 import json
 from collections import Counter
 from pathlib import Path
@@ -51,6 +52,9 @@ def main(args):
             texts.append(text)
 
     _, df, idf = calc_score_and_weight(texts, present_tokenizer)
+    if args.sqrt:
+        for k in idf:
+            idf[k] = np.sqrt(idf[k])
 
     unknown_word_weight = 1.0
 
@@ -60,3 +64,16 @@ def main(args):
     word_weights = WordWeights(vocab=vocab, word_weights=idf, unknown_word_weight=unknown_word_weight)
     model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
     model.save(out_dir)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--input")
+    parser.add_argument("--output")
+    parser.add_argument("--tokenizer_path")
+    parser.add_argument("--sqrt", help="weight sqrt")
+
+    args = parser.parse_args()
+
+    main(args)
