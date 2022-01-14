@@ -58,7 +58,7 @@ def main(args):
 
     unknown_word_weight = 1.0
 
-    word_embedding_model = Transformer(args.model_name, max_seq_length=args.max_seq_length)
+    word_embedding_model = Transformer(args.model_path)
     pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
     vocab = word_embedding_model.tokenizer.get_vocab()
     word_weights = WordWeights(vocab=vocab, word_weights=idf, unknown_word_weight=unknown_word_weight)
@@ -72,7 +72,8 @@ if __name__ == "__main__":
     parser.add_argument("--input")
     parser.add_argument("--output")
     parser.add_argument("--tokenizer_path")
-    parser.add_argument("--sqrt", help="weight sqrt")
+    parser.add_argument("--model_path")
+    parser.add_argument("--sqrt", help="weight sqrt", action="store_true")
 
     args = parser.parse_args()
 

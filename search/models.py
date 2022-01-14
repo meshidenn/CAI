@@ -97,7 +97,7 @@ class BEIRSpladeModel:
 
 
 class Splade(nn.Module):
-    def __init__(self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, **kwargs):
+    def __init__(self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, load_weight=False, **kwargs):
         super().__init__()
         if os.path.exists(os.path.join(model_type_or_dir, "0_MLMTransformer")):
             print("path", model_type_or_dir)
@@ -107,7 +107,7 @@ class Splade(nn.Module):
         self.tokenizer = AutoTokenizer.from_pretrained(model_type_or_dir)
 
         weights_path = os.path.join(model_type_or_dir, IDF_FILE_NAME)
-        if os.path.exists(weights_path):
+        if load_weight:
             with open(weights_path) as f:
                 weights = json.load(f)
 
