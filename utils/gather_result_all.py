@@ -18,12 +18,21 @@ def main(args):
 
         df_result = pd.read_csv(result_path, index_col=0, header=0)
         df_result.rename(index=lambda s: re.sub("[0-9][0-9]+", "vocab", s), inplace=True)
+        df_result_ndcg = df_result["NDCG@10"]
+        df_result_recall = df_result["Recall@100"]
+        df_result_recap = df_result["R_cap@100"]
 
         if i == 0:
             df_result_all = df_result
+            df_result_ndcg_all = df_result_ndcg
+            df_result_recall_all = df_result_recall
+            df_result_recap_all = df_result_recap
             columns = df_result.columns
         else:
             df_result_all = pd.concat([df_result_all, df_result], axis=1)
+            df_result_ndcg_all = pd.concat([df_result_ndcg_all, df_result_ndcg], axis=1)
+            df_result_recall_all = pd.concat([df_result_recall_all, df_result_recall], axis=1)
+            df_result_recap_all = pd.concat([df_result_recap_all, df_result_recap], axis=1)
 
         dataset_name = str(result_path).replace(args.root_dir, "").replace("/result/da/all_result.csv", "")
         dataset_names.append(dataset_name)
@@ -38,6 +47,9 @@ def main(args):
     multi_columns = pd.MultiIndex.from_tuples(multi_columns)
     df_result_all.columns = multi_columns
     df_result_all.to_csv("all_da_result.csv")
+    df_result_all_ndcg.to_csv("all_da_result_ndcg.csv")
+    df_result_all_recall.to_csv("all_da_result_recall.csv")
+    df_result_all_recap.to_csv("all_da_result_recap.csv")
 
 
 if __name__ == "__main__":
