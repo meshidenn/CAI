@@ -25,7 +25,7 @@ def main(args):
         else:
             df_result_all = pd.concat([df_result_all, df_result], axis=1)
 
-        dataset_name = str(result_path).replace(args.root_dir, "").replace("/da/all_result.csv", "")
+        dataset_name = str(result_path).replace(args.root_dir, "").replace("/result/da/all_result.csv", "")
         dataset_names.append(dataset_name)
 
     all_columns = df_result_all.columns
