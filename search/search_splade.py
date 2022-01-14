@@ -79,7 +79,7 @@ if __name__ == "__main__":
     parser.add_argument("--data_dir")
     parser.add_argument("--dataset")
     parser.add_argument("--out_name", default="gen_q")
-    parser.add_argument("--load_weigh", types=strtobool)
+    parser.add_argument("--load_weigh", type=strtobool)
 
     args = parser.parse_args()
 
