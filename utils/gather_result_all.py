@@ -17,7 +17,7 @@ def main(args):
         print(result_path)
 
         df_result = pd.read_csv(result_path, index_col=0, header=0)
-        df_result.rename(index=lambda s: re.sub("[0-9][0-9]+", "vocab", s))
+        df_result.rename(index=lambda s: re.sub("[0-9][0-9]+", "vocab", s), inplace=True)
 
         if i == 0:
             df_result_all = df_result
