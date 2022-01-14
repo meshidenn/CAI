@@ -47,6 +47,9 @@ def main(args):
         with open(weight_path) as f:
             word_weights = json.load(f)
 
+        for k in word_weights:
+            word_weights[k] = np.sqrt(word_weights[k])
+
         unknown_word_weight = 1.0
 
         word_weights = WordWeights(vocab=vocab, word_weights=word_weights, unknown_word_weight=unknown_word_weight)
