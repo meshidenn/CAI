@@ -2,6 +2,7 @@ from collections import Counter
 import argparse
 import json
 import os
+from distutils.util import strtobool
 
 import numpy as np
 import torch
@@ -14,6 +15,7 @@ from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval.evaluation import EvaluateRetrieval
 
 from sentence_transformers import SentenceTransformer, losses
+from sentence_transformers.models import Transformer, WordWeights, Pooling
 from models import BEIRSbert
 
 
@@ -36,7 +38,22 @@ def calc_idf_and_doclen(corpus, tokenizer, sep):
 
 
 def main(args):
-    model = SentenceTransformer(args.model_type_or_dir)
+    if args.outer_weight:
+        word_embedding_model = Transformer(args.model_type_or_dir)
+
+        vocab = word_embedding_model.tokenizer.get_vocab()
+        pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
+        weight_path = os.path.join(args.model_name, "weights.json")
+        with open(weight_path) as f:
+            word_weights = json.load(f)
+
+        unknown_word_weight = 1.0
+
+        word_weights = WordWeights(vocab=vocab, word_weights=word_weights, unknown_word_weight=unknown_word_weight)
+        model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
+    else:
+        model = SentenceTransformer(args.model_type_or_dir)
+
     model.eval()
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_type_or_dir)
@@ -72,6 +89,7 @@ if __name__ == "__main__":
     parser.add_argument("--data_dir")
     parser.add_argument("--dataset")
     parser.add_argument("--out_name", default="gen_q")
+    parser.add_argument("--outer_weight", type=strtobool)
 
     args = parser.parse_args()
 
