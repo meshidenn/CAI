@@ -41,7 +41,6 @@ def calc_score_and_weight(texts, present_tokenizer):
 
 def main(args):
     input_file = Path(args.input)
-    out_dir = Path(args.output)
     present_tokenizer = DistilBertTokenizer.from_pretrained(args.tokenizer_path)
     texts = []
 
