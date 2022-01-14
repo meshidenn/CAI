@@ -2,6 +2,7 @@ from collections import Counter
 import argparse
 import json
 import os
+from distutils.util import strtobool
 
 import numpy as np
 import torch
@@ -78,6 +79,7 @@ if __name__ == "__main__":
     parser.add_argument("--data_dir")
     parser.add_argument("--dataset")
     parser.add_argument("--out_name", default="gen_q")
+    parser.add_argument("--load_weigh", types=strtobool)
 
     args = parser.parse_args()
 

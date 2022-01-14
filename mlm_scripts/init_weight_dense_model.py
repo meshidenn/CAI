@@ -63,7 +63,7 @@ def main(args):
     vocab = word_embedding_model.tokenizer.get_vocab()
     word_weights = WordWeights(vocab=vocab, word_weights=idf, unknown_word_weight=unknown_word_weight)
     model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
-    model.save(out_dir)
+    model.save(args.output)
 
 
 if __name__ == "__main__":
