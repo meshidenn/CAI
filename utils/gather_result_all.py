@@ -6,6 +6,16 @@ from pathlib import Path
 import pandas as pd
 
 
+def save_each_ind(df, dataset_names, save_path):
+    multi_columns_ind = []
+    for i, eic in enumerate(df.columns):
+        multi_columns_ind.append((dataset_names[i], eic))
+
+    multi_columns_ind = pd.MultiIndex.from_tuples(multi_columns_ind)
+    df.columns = multi_columns_ind
+    df.to_csv(save_path)
+
+
 def main(args):
     root_dir = Path(args.root_dir)
 
@@ -38,6 +48,7 @@ def main(args):
         dataset_names.append(dataset_name)
 
     all_columns = df_result_all.columns
+    each_ind_columns = df_result_ndcg_all.columns
     chunck_size = len(columns)
     multi_columns = []
     for i, c in enumerate(all_columns):
@@ -47,9 +58,18 @@ def main(args):
     multi_columns = pd.MultiIndex.from_tuples(multi_columns)
     df_result_all.columns = multi_columns
     df_result_all.to_csv("all_da_result.csv")
+
+    multi_columns_ind = []
+    for i, eic in enumerate(df_result_ndcg.columns):
+        multi_columns_ind.append((dataset_names[i], eic))
+
+    multi_columns_ind = pd.MultiIndex.from_tuples(multi_columns_ind)
+    df_result_ndcg_all.columns = multi_columns_ind
     df_result_ndcg_all.to_csv("all_da_result_ndcg.csv")
-    df_result_recall_all.to_csv("all_da_result_recall.csv")
-    df_result_recap_all.to_csv("all_da_result_recap.csv")
+
+    save_each_ind(df_result_ndcg_all, dataset_names, "all_da_result_ndcg.csv")
+    save_each_ind(df_result_recall_all, dataset_names, "all_da_result_recall.csv")
+    save_each_ind(df_result_recap_all, dataset_names, "all_da_result_recap.csv")
 
 
 if __name__ == "__main__":
