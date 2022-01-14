@@ -1,5 +1,6 @@
 import argparse
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -8,7 +9,7 @@ import pandas as pd
 def main(args):
     root_dir = Path(args.root_dir)
 
-    all_result_path = root_dir.glob("**/da/all_result.csv")
+    all_result_path = sorted(root_dir.glob("**/da/all_result.csv"))
 
     dataset_names = []
 
@@ -16,6 +17,7 @@ def main(args):
         print(result_path)
 
         df_result = pd.read_csv(result_path, index_col=0, header=0)
+        df_result.rename(index=lambda s: re.sub("[0-9][0-9]+", "vocab", s))
 
         if i == 0:
             df_result_all = df_result
