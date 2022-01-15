@@ -8,22 +8,29 @@ import numpy as np
 from search import models
 
 
-def test_sqrt_weight():
-    path = "/groups/gcb50243/iida.h/BEIR/dataset/arguana/new_model/splade/splade"
-    weight_path = os.path.join(path, models.IDF_FILE_NAME)
+MODEL_PATH = "/groups/gcb50243/iida.h/BEIR/dataset/arguana/new_model/splade/splade"
 
+
+def test_none():
+    model = models.Splade(MODEL_PATH, load_weight=False)
+    assert model.vocab_weights is None
+
+
+def test_weight():
+    weight_path = os.path.join(MODEL_PATH, models.IDF_FILE_NAME)
     with open(weight_path) as f:
         weight = json.load(f)
 
-    model = models.Splade(path, load_weight=False)
-    assert model.vocab_weights is None
-
-    model = models.Splade(path, load_weight=True, weight_sqrt=False)
-
+    model = models.Splade(MODEL_PATH, load_weight=True, weight_sqrt=False)
     for i, v in weight.items():
         assert round(v, 3) == round(model.vocab_weights[int(i)].item(), 3)
 
-    model = models.Splade(path, load_weight=True, weight_sqrt=True)
 
+def test_sqrt_weight():
+    weight_path = os.path.join(MODEL_PATH, models.IDF_FILE_NAME)
+    with open(weight_path) as f:
+        weight = json.load(f)
+
+    model = models.Splade(MODEL_PATH, load_weight=True, weight_sqrt=True)
     for i, v in weight.items():
         assert round(np.sqrt(v), 3) == round(model.vocab_weights[int(i)].item(), 3)
