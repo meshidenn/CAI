@@ -15,6 +15,9 @@ def test_sqrt_weight():
     with open(weight_path) as f:
         weight = json.load(f)
 
+    model = models.Splade(path, load_weight=False)
+    assert model.vocab_weights is None
+
     model = models.Splade(path, load_weight=True, weight_sqrt=False)
 
     for i, v in weight.items():
