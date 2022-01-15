@@ -2,7 +2,7 @@ import os
 import json
 import sys
 
-sys.path.append(os.pardir)
+sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
 
 from search import models
 
