@@ -17,4 +17,4 @@ def test_sqrt_weight():
     model = models.Splade(path, load_weight=True, weight_sqrt=False)
 
     for i, v in weight.items():
-        assert round(v, 3) == round(model.vocab_weights[int(i)].item_, 3)
+        assert round(v, 3) == round(model.vocab_weights[int(i)].item(), 3)
