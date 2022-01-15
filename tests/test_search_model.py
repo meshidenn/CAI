@@ -4,6 +4,7 @@ import sys
 
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
 
+import numpy as np
 from search import models
 
 
@@ -18,3 +19,8 @@ def test_sqrt_weight():
 
     for i, v in weight.items():
         assert round(v, 3) == round(model.vocab_weights[int(i)].item(), 3)
+
+    model = models.Splade(path, load_weight=True, weight_sqrt=True)
+
+    for i, v in weight.items():
+        assert round(np.sqrt(v), 3) == round(model.vocab_weights[int(i)].item(), 3)
