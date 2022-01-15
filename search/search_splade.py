@@ -36,6 +36,7 @@ def calc_idf_and_doclen(corpus, tokenizer, sep):
 
 
 def main(args):
+    print(args.load_weight, args.weight_sqrt)
     model = Splade(args.model_type_or_dir, load_weight=args.load_weight, weight_sqrt=args.weight_sqrt)
     model.eval()
 
