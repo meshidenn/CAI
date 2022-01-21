@@ -5,14 +5,14 @@ from tqdm import tqdm
 
 import torch
 from transformers import AutoModelForMaskedLM, AutoTokenizer
-from transformers import DistilBertTokenizerFast
+from transformers import DistilBertTokenizerFast, BertTokenizerFast
 
 
 def main(args):
     org_tokenizer = AutoTokenizer.from_pretrained(args.org_model_path)
     org_model = AutoModelForMaskedLM.from_pretrained(args.org_model_path)
     # new_tokenizer = DistilBertTokenizerFast(os.path.join(args.new_tokenizer_path, "vocab.txt"))
-    new_tokenizer = AutoTokenizer(os.path.join(args.new_tokenizer_path, "vocab.txt"))
+    new_tokenizer = BertTokenizerFast(os.path.join(args.new_tokenizer_path, "vocab.txt"))
     new_model = AutoModelForMaskedLM.from_pretrained(args.org_model_path)
 
     vocab_diff = set(new_tokenizer.get_vocab().keys()) - set(org_tokenizer.get_vocab().keys())
