@@ -73,6 +73,8 @@ train_loss = losses.MultipleNegativesRankingLoss(model=retriever.model)
 try:
     #### Please Note - not all datasets contain a dev split, comment out the line if such the case
     dev_corpus, dev_queries, dev_qrels = GenericDataLoader(data_path).load(split="dev")
+    del dev_corpus
+    dev_corpus = corpus
 
     #### Prepare dev evaluator
     ir_evaluator = retriever.load_ir_evaluator(dev_corpus, dev_queries, dev_qrels)
