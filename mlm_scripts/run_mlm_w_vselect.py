@@ -127,7 +127,8 @@ class DataTrainingArguments:
     dataset_name: Optional[str] = field(
         default=None, metadata={"help": "The name of the dataset to use (via the datasets library)."}
     )
-    data_root_dir: Optional[str] = field(default=None, metadata={"help": ""})
+    tokenizer_path: Optional[str] = field(default=None, metadata={"help": ""})
+    init_vocab: Optional[int] = field(default=30522)
     dataset_config_name: Optional[str] = field(
         default=None, metadata={"help": "The configuration name of the dataset to use (via the datasets library)."}
     )
@@ -202,12 +203,12 @@ class RegTrainingArguments(TrainingArguments):
     recadam_anneal_lamb: float = field(default=0.8)
 
 
-def choose_model(data_path, model_path, percent=0.05):
-    score_file = os.path.join(data_path, "tokenizer", "pre_tokenize", "raw", "scores.json")
+def choose_model(tokenizer_path, model_path, init_vocab, increment=1000, percent=0.05):
+    score_file = os.path.join(tokenizer_path, "pre_tokenize", "raw", "scores.json")
     with open(score_file) as f:
         scores = json.load(f)
 
-    criteria = (scores["31522"] - scores["30522"]) * percent
+    criteria = (scores[str(init_vocab + increment)] - scores[str(init_vocab)]) * percent
     num_vocabs = list(scores.keys())
     for i in range(len(num_vocabs) - 1):
         diff = scores[num_vocabs[i + 1]] - scores[num_vocabs[i]]
@@ -337,7 +338,7 @@ def main():
     # The .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
 
-    model_name_or_path, vocab_num = choose_model(data_args.data_root_dir, model_args.model_name_or_path)
+    model_name_or_path, vocab_num = choose_model(data_args.tokenizer_path, model_args.model_name_or_path, data_args.init_vocab)
 
     if training_args.reg:
         training_args.output_dir = os.path.join(
