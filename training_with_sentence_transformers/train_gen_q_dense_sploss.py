@@ -262,6 +262,7 @@ if __name__ == "__main__":
     parser.add_argument("--ir_type", help="(dense or tas-b) or (sparse or splade)")
     parser.add_argument("--out_suffix", default="")
     parser.add_argument("--bm25_neg", action="store_true")
+    parser.add_argument("--index", default="")
     parser.add_argument("--with_weight", default=False, type=strtobool)
     parser.add_argument("--train_batch_size", default=64, type=int)
     parser.add_argument("--dev_batch_size", default=32, type=int)
