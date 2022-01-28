@@ -58,9 +58,9 @@ class NegDataset(Dataset):
 
 
 def get_model(args):
-    if args.model_type in {"dense", "tas-b"}:
+    if args.ir_type in {"dense", "tas-b"}:
         return get_dense_model(args)
-    elif args.model_type in {"sparse", "splade"}:
+    elif args.ir_type in {"sparse", "splade"}:
         return get_splade_model(args)
     else:
         raise ValueError(f"{args.model_type} doesn't exist")
@@ -182,7 +182,7 @@ def gen_save_model_path(args, data_path):
                 genq_name = "GenQ-{}-{}".format(args.out_suffix, "bm25_neg")
         else:
             if args.with_weight:
-                genq_name =  "GenQ-{}-{}".format(args.out_suffix, "weight")
+                genq_name = "GenQ-{}-{}".format(args.out_suffix, "weight")
             else:
                 genq_name = "GenQ-{}-{}".format(args.out_suffix)
     else:
@@ -193,10 +193,10 @@ def gen_save_model_path(args, data_path):
                 genq_name = "GenQ-bm25_neg"
         else:
             if args.with_weight:
-                genq_name = 'GenQ-weight'
+                genq_name = "GenQ-weight"
             else:
                 genq_name = "GenQ"
-            
+
     model_save_path = os.path.join(data_path, "new_model", args.model_type, genq_name)
     os.makedirs(model_save_path, exist_ok=True)
     return model_save_path
@@ -258,8 +258,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_path")
     parser.add_argument("--dataset")
-    parser.add_argument("--model_type", help="(dense or tas-b) or (sparse or splade)")
+    parser.add_argument("--model_type", help="save moadel type")
+    parser.add_argument("--ir_type", help="(dense or tas-b) or (sparse or splade)")
     parser.add_argument("--out_suffix", default="")
+    parser.add_argument("--bm25_neg", action="store_true")
     parser.add_argument("--with_weight", default=False, type=strtobool)
     parser.add_argument("--train_batch_size", default=64, type=int)
     parser.add_argument("--dev_batch_size", default=32, type=int)
