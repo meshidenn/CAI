@@ -184,7 +184,7 @@ def gen_save_model_path(args, data_path):
             if args.with_weight:
                 genq_name = "GenQ-{}-{}".format(args.out_suffix, "weight")
             else:
-                genq_name = "GenQ-{}-{}".format(args.out_suffix)
+                genq_name = "GenQ-{}".format(args.out_suffix)
     else:
         if args.bm25_neg:
             if args.with_weight:
