@@ -175,17 +175,29 @@ def bm25_neg_dataloader(corpus, queries, train_qrels, bm25_result, num_negs_per_
 
 def gen_save_model_path(args, data_path):
     if args.out_suffix:
-        if args.with_weight:
-            model_save_path = os.path.join(
-                data_path, "new_model", args.model_type, "GenQ-{}-{}".format(args.out_suffix, "weight")
-            )
+        if args.bm25_neg:
+            if args.with_weight:
+                genq_name = "GenQ-{}-{}-{}".format(args.out_suffix, "bm25_neg", "weight")
+            else:
+                genq_name = "GenQ-{}-{}".format(args.out_suffix, "bm25_neg")
         else:
-            model_save_path = os.path.join(data_path, "new_model", args.model_type, "GenQ-{}".format(args.out_suffix))
+            if args.with_weight:
+                genq_name =  "GenQ-{}-{}".format(args.out_suffix, "weight")
+            else:
+                genq_name = "GenQ-{}-{}".format(args.out_suffix)
     else:
-        if args.with_weight:
-            model_save_path = os.path.join(data_path, "new_model", args.model_type, "GenQ-weight")
+        if args.bm25_neg:
+            if args.with_weight:
+                genq_name = "GenQ-bm25_neg-weight"
+            else:
+                genq_name = "GenQ-bm25_neg"
         else:
-            model_save_path = os.path.join(data_path, "new_model", args.model_type, "GenQ")
+            if args.with_weight:
+                genq_name = 'GenQ-weight'
+            else:
+                genq_name = "GenQ"
+            
+    model_save_path = os.path.join(data_path, "new_model", args.model_type, genq_name)
     os.makedirs(model_save_path, exist_ok=True)
     return model_save_path
 
