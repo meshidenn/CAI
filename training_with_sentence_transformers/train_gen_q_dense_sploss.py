@@ -219,7 +219,7 @@ def main(args):
     retriever = TrainRetriever(model=model, batch_size=args.train_batch_size)
 
     #### Prepare training samples
-    train_dataloader, warmup_steps = get_dataloader(args, corpus, gen_queries, gen_qrels)
+    train_dataloader, warmup_steps = get_dataloader(args, corpus, gen_queries, gen_qrels, retriever)
     train_loss = losses.MultipleNegativesRankingLoss(model=retriever.model)
 
     try:
