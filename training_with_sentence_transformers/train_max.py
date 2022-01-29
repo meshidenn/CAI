@@ -26,6 +26,7 @@ logging.basicConfig(
 #### /print debug information to stdout
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--data_folder", default="msmarco-data")
 parser.add_argument("--train_batch_size", default=64, type=int)
 parser.add_argument("--max_seq_length", default=300, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
@@ -72,7 +73,7 @@ with open(train_script_path, "a") as fOut:
     fOut.write("\n\n# Script was called via:\n#python " + " ".join(sys.argv))
 
 ### Now we read the MS MARCO dataset
-data_folder = "msmarco-data"
+data_folder = args.data_folder
 
 #### Read the corpus file containing all the passages. Store them in the corpus dict
 corpus = {}  # dict in the format: passage_id -> passage. Stores all existing passages
