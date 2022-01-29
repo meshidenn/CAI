@@ -64,7 +64,7 @@ args = parser.parse_args()
 print(args)
 
 # The  model we want to fine-tune
-model_name = "distilbert-base-uncased"
+model_name = args.model_name
 
 train_batch_size = (
     args.train_batch_size
