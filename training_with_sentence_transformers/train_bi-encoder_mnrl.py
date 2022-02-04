@@ -42,6 +42,7 @@ logging.basicConfig(
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_folder", default="msmarco-data")
+parser.add_argument("--outpur_dir")
 parser.add_argument("--train_batch_size", default=64, type=int)
 parser.add_argument("--max_seq_length", default=300, type=int)
 parser.add_argument("--model_name", required=True)
@@ -87,8 +88,8 @@ else:
     pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(), args.pooling)
     model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
-model_save_path = "output/train_bi-encoder-mnrl-{}-margin_{:.1f}-{}".format(
-    model_name.replace("/", "-"), ce_score_margin, datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+model_save_path = "{}/train_bi-encoder-mnrl-{}-margin_{:.1f}-{}".format(
+    args.output_dir, model_name.replace("/", "-"), ce_score_margin, datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 )
 
 
