@@ -42,7 +42,7 @@ logging.basicConfig(
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_folder", default="msmarco-data")
-parser.add_argument("--outpur_dir")
+parser.add_argument("--output_dir")
 parser.add_argument("--train_batch_size", default=64, type=int)
 parser.add_argument("--max_seq_length", default=300, type=int)
 parser.add_argument("--model_name", required=True)
