@@ -172,7 +172,7 @@ def main(args):
     scores[vocab_size] = score
     increment_iter = 20
 
-    for i in range(increment_iter):
+    for i in tqdm(range(increment_iter)):
         vocab_file, prev_vocab_size = build_target_size_vocab(increment, texts, present_tokenizer, args.remover)
         present_tokenizer = BertTokenizer(vocab_file.name, do_lower_case=True)
         update_vocab_size = len(present_tokenizer.vocab)
