@@ -8,7 +8,7 @@ from collections import Counter
 from pathlib import Path
 from tqdm import tqdm
 import numpy as np
-from transformers import AutoTokenizer, BertTokenizer
+from transformers import AutoTokenizer, BertTokenizerFast
 from tokenizers import Tokenizer, normalizers
 from tokenizers.models import WordPiece
 from tokenizers.normalizers import Lowercase, NFD, StripAccents
@@ -124,7 +124,7 @@ def weight_save(outpath, df, idf):
 def main(args):
     input_file = Path(args.input)
     out_dir = Path(args.output)
-    present_tokenizer = BertTokenizer.from_pretrained(args.tokenizer_path)
+    present_tokenizer = BertTokenizerFast.from_pretrained(args.tokenizer_path)
     texts = []
 
     if args.corpus_type == "search":
@@ -174,7 +174,7 @@ def main(args):
 
     for i in tqdm(range(increment_iter)):
         vocab_file, prev_vocab_size = build_target_size_vocab(increment, texts, present_tokenizer, args.remover)
-        present_tokenizer = BertTokenizer(vocab_file.name, do_lower_case=True)
+        present_tokenizer = BertTokenizerFast(vocab_file.name, do_lower_case=True)
         update_vocab_size = len(present_tokenizer.vocab)
         score, df, idf = calc_score_and_weight(texts, present_tokenizer)
         scores[update_vocab_size] = score
