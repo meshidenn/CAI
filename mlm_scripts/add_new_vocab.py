@@ -8,7 +8,7 @@ from collections import Counter
 from pathlib import Path
 from tqdm import tqdm
 import numpy as np
-from transformers import AutoTokenizer, DistilBertTokenizer, BertTokenizer
+from transformers import AutoTokenizer, BertTokenizer
 from tokenizers import Tokenizer, normalizers
 from tokenizers.models import WordPiece
 from tokenizers.normalizers import Lowercase, NFD, StripAccents
@@ -124,14 +124,22 @@ def weight_save(outpath, df, idf):
 def main(args):
     input_file = Path(args.input)
     out_dir = Path(args.output)
-    present_tokenizer = DistilBertTokenizer.from_pretrained(args.tokenizer_path)
+    present_tokenizer = BertTokenizer.from_pretrained(args.tokenizer_path)
     texts = []
 
-    with input_file.open(mode="r") as f:
-        for line in tqdm(f):
-            jline = json.loads(line)
-            text = jline["title"] + " " + jline["text"]
-            texts.append(text)
+    if args.corpus_type == "search":
+        with input_file.open(mode="r") as f:
+            for line in tqdm(f):
+                jline = json.loads(line)
+                text = jline["title"] + " " + jline["text"]
+                texts.append(text)
+
+    elif args.corpus_type == "raw":
+        with input_file.open(mode="r") as f:
+            for line in tqdm(f):
+                if not line:
+                    continue
+                texts.append(text)
 
     out_dir = os.path.join(out_dir, args.preproc)
     if args.preproc == "pre_tokenize":
@@ -151,15 +159,16 @@ def main(args):
         out_dir = os.path.join(out_dir, "raw")
 
     scores = dict()
-    increment = 1000
+    increment = args.increment
     vocab_size = len(present_tokenizer.get_vocab())
     score, df, idf = calc_score_and_weight(texts, present_tokenizer)
     weight_save(args.tokenizer_path, df, idf)
     scores[vocab_size] = score
+    increment_iter = 20
 
-    for i in range(20):
+    for i in range(increment_iter):
         vocab_file, prev_vocab_size = build_target_size_vocab(increment, texts, present_tokenizer, args.remover)
-        present_tokenizer = DistilBertTokenizer(vocab_file.name, do_lower_case=True)
+        present_tokenizer = BertTokenizer(vocab_file.name, do_lower_case=True)
         update_vocab_size = len(present_tokenizer.vocab)
         score, df, idf = calc_score_and_weight(texts, present_tokenizer)
         scores[update_vocab_size] = score
@@ -181,8 +190,10 @@ if __name__ == "__main__":
     parser.add_argument("--input")
     parser.add_argument("--output")
     parser.add_argument("--tokenizer_path")
+    parser.add_argument("--increment", type=int, default=1000)
     parser.add_argument("--preproc", help="raw or pre_tokenize")
     parser.add_argument("--remover", action="store_true")
+    parser.add_argument("--corpus_type", default="search", help="search or raw")
 
     args = parser.parse_args()
 
