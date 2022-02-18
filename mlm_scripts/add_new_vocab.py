@@ -132,6 +132,8 @@ def main(args):
             for line in tqdm(f):
                 jline = json.loads(line)
                 text = jline["title"] + " " + jline["text"]
+                if args.uncased:
+                    text = text.lower()
                 texts.append(text)
 
     elif args.corpus_type == "raw":
@@ -139,6 +141,10 @@ def main(args):
             for line in tqdm(f):
                 if not line:
                     continue
+                if args.uncased:
+                    text = line.strip().lower()
+                else:
+                    text = line.strip()
                 texts.append(text)
 
     out_dir = os.path.join(out_dir, args.preproc)
@@ -194,6 +200,7 @@ if __name__ == "__main__":
     parser.add_argument("--preproc", help="raw or pre_tokenize")
     parser.add_argument("--remover", action="store_true")
     parser.add_argument("--corpus_type", default="search", help="search or raw")
+    parser.add_argument("--uncased", action="store_true")
 
     args = parser.parse_args()
 
