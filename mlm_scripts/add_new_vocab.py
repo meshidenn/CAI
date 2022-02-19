@@ -168,7 +168,9 @@ def main(args):
     increment = args.increment
     vocab_size = len(present_tokenizer.get_vocab())
     score, df, idf = calc_score_and_weight(texts, present_tokenizer)
-    weight_save(args.tokenizer_path, df, idf)
+    tk_outpath = os.path.join(out_dir, str(vocab_size))
+    weight_save(tk_outpath, df, idf)
+    present_tokenizer.save_pretrained(tk_outpath)
     scores[vocab_size] = score
     increment_iter = 20
 
