@@ -164,12 +164,12 @@ def main(args):
     else:
         out_dir = os.path.join(out_dir, "raw")
 
-    os.makedirs(out_dir, exist_ok=True)
     scores = dict()
     increment = args.increment
     vocab_size = len(present_tokenizer.get_vocab())
     score, df, idf = calc_score_and_weight(texts, present_tokenizer)
     tk_outpath = os.path.join(out_dir, str(vocab_size))
+    os.makedirs(tk_outpath, exist_ok=True)
     weight_save(tk_outpath, df, idf)
     present_tokenizer.save_pretrained(tk_outpath)
     scores[vocab_size] = score
