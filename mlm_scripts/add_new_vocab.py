@@ -164,6 +164,7 @@ def main(args):
     else:
         out_dir = os.path.join(out_dir, "raw")
 
+    os.makedirs(out_dir, exist_ok=True)
     scores = dict()
     increment = args.increment
     vocab_size = len(present_tokenizer.get_vocab())
