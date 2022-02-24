@@ -166,25 +166,30 @@ def main(args):
 
     scores = dict()
     increment = args.increment
-    # vocab_size = len(present_tokenizer.get_vocab())
-    # score, df, idf = calc_score_and_weight(texts, present_tokenizer)
-    # tk_outpath = os.path.join(out_dir, str(vocab_size))
-    # os.makedirs(tk_outpath, exist_ok=True)
-    # weight_save(tk_outpath, df, idf)
-    # present_tokenizer.save_pretrained(tk_outpath)
-    # scores[vocab_size] = score
-
-    vocab_file, prev_vocab_size = build_target_size_vocab(increment, texts, present_tokenizer, args.remover)
-    present_tokenizer = BertTokenizerFast(vocab_file.name, do_lower_case=True)
-    update_vocab_size = len(present_tokenizer.vocab)
+    vocab_size = len(present_tokenizer.get_vocab())
     score, df, idf = calc_score_and_weight(texts, present_tokenizer)
-    scores[update_vocab_size] = score
-    tk_outpath = os.path.join(out_dir, str(update_vocab_size))
-    present_tokenizer.save_pretrained(tk_outpath)
+    tk_outpath = os.path.join(out_dir, str(vocab_size))
+    os.makedirs(tk_outpath, exist_ok=True)
     weight_save(tk_outpath, df, idf)
+    present_tokenizer.save_pretrained(tk_outpath)
+    scores[vocab_size] = score
+    increment_iter = 20
 
-    print(update_vocab_size, prev_vocab_size)
-    with open(os.path.join(tk_outpath, "scores.json"), "w") as f:
+    for i in tqdm(range(increment_iter)):
+        vocab_file, prev_vocab_size = build_target_size_vocab(increment, texts, present_tokenizer, args.remover)
+        present_tokenizer = BertTokenizerFast(vocab_file.name, do_lower_case=True)
+        update_vocab_size = len(present_tokenizer.vocab)
+        score, df, idf = calc_score_and_weight(texts, present_tokenizer)
+        scores[update_vocab_size] = score
+        tk_outpath = os.path.join(out_dir, str(update_vocab_size))
+        present_tokenizer.save_pretrained(tk_outpath)
+        weight_save(tk_outpath, df, idf)
+
+        print(update_vocab_size, prev_vocab_size)
+        if update_vocab_size - prev_vocab_size < increment:
+            break
+
+    with open(os.path.join(out_dir, "scores.json"), "w") as f:
         json.dump(scores, f)
 
 
