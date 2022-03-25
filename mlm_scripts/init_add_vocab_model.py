@@ -8,11 +8,20 @@ from transformers import AutoModelForMaskedLM, AutoTokenizer
 from transformers import DistilBertTokenizerFast, BertTokenizerFast
 
 
+BERT = "bert-base-uncased"
+DistilBERT = "distilbert-base-uncased"
+
+
 def main(args):
     org_tokenizer = AutoTokenizer.from_pretrained(args.org_model_path)
     org_model = AutoModelForMaskedLM.from_pretrained(args.org_model_path)
-    # new_tokenizer = DistilBertTokenizerFast(os.path.join(args.new_tokenizer_path, "vocab.txt"))
-    new_tokenizer = BertTokenizerFast(os.path.join(args.new_tokenizer_path, "vocab.txt"))
+    if args.org_model_path == BERT:
+        new_tokenizer = BertTokenizerFast(os.path.join(args.new_tokenizer_path, "vocab.txt"))
+    elif args.org_model_path == DistilBERT:
+        new_tokenizer = DistilBertTokenizerFast(os.path.join(args.new_tokenizer_path, "vocab.txt"))
+    else:
+        raise ValueError("mode {args.org_model_path} doesn't exist")
+
     new_model = AutoModelForMaskedLM.from_pretrained(args.org_model_path)
 
     vocab_diff = set(new_tokenizer.get_vocab().keys()) - set(org_tokenizer.get_vocab().keys())
@@ -26,8 +35,12 @@ def main(args):
             continue
 
         with torch.no_grad():
-            new_embed = torch.mean(org_model.distilbert.embeddings.word_embeddings(org_token_ids).squeeze(), dim=0)
-            new_model.distilbert.embeddings.word_embeddings.weight[new_v_id] = new_embed
+            if args.org_model_path == BERT:
+                new_embed = torch.mean(org_model.distilbert.embeddings.word_embeddings(org_token_ids).squeeze(), dim=0)
+                new_model.bert.embeddings.word_embeddings.weight[new_v_id] = new_embed
+            elif args.org_model_path == DistilBERT:
+                new_embed = torch.mean(org_model.distilbert.embeddings.word_embeddings(org_token_ids).squeeze(), dim=0)
+                new_model.bert.embeddings.word_embeddings.weight[new_v_id] = new_embed
 
     if not os.path.exists(args.output_path):
         os.makedirs(args.output_path)
