@@ -36,11 +36,11 @@ def main(args):
 
         with torch.no_grad():
             if args.org_model_path == BERT:
-                new_embed = torch.mean(org_model.distilbert.embeddings.word_embeddings(org_token_ids).squeeze(), dim=0)
+                new_embed = torch.mean(org_model.bert.embeddings.word_embeddings(org_token_ids).squeeze(), dim=0)
                 new_model.bert.embeddings.word_embeddings.weight[new_v_id] = new_embed
             elif args.org_model_path == DistilBERT:
                 new_embed = torch.mean(org_model.distilbert.embeddings.word_embeddings(org_token_ids).squeeze(), dim=0)
-                new_model.bert.embeddings.word_embeddings.weight[new_v_id] = new_embed
+                new_model.distilbert.embeddings.word_embeddings.weight[new_v_id] = new_embed
 
     if not os.path.exists(args.output_path):
         os.makedirs(args.output_path)
