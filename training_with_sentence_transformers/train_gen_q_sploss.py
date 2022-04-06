@@ -10,8 +10,8 @@ from distutils.util import strtobool
 import argparse
 import pathlib, os
 import logging
-import models
-import losses
+from splade_vocab import models
+from splade_vocab import losses
 import json
 
 #### Just some code to print debug information to stdout

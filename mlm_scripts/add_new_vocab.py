@@ -61,18 +61,41 @@ def calc_score_and_weight(texts, present_tokenizer):
     return score, all_df, all_idf
 
 
+def calc_score_less_memory(texts, present_tokenizer):
+    prob = Counter()
+    for text in tqdm(texts):
+        output = present_tokenizer(text)["input_ids"]
+        prob.update(output)
+
+    v_prob = list(prob.values())
+    N = np.sum(v_prob)
+    for k in prob:
+        prob[k] /= N
+
+    score = []
+    for text in tqdm(texts):
+        tk_doc = present_tokenizer(text)["input_ids"]
+        score.append(np.sum([np.log(prob[t]) for t in tk_doc]))
+
+    score = np.mean(score)
+    return score
+
+
 def remove_partial_vocab(add_vocabs, present_vocabs, increment, remover):
     new_add_vocabs = []
-    present_present_vocabs = present_vocabs
+    # present_present_vocabs = present_vocabs
     for av in tqdm(add_vocabs):
-        if remover and CODE_REMOVER.search(av):
+        if remover and CODE_REMOVER.match(av):
             continue
-        partial_hit = any([av in pv for pv in present_present_vocabs])
-        if not partial_hit:
-            new_add_vocabs.append(av)
-            present_present_vocabs.add(av)
+        new_add_vocabs.append(av)
+        if len(new_add_vocabs) == increment:
+            break
+        # partial_hit = any([av in pv for pv in present_present_vocabs])
+        # if not partial_hit:
+        #     new_add_vocabs.append(av)
+        #     present_present_vocabs.add(av)
 
-    return new_add_vocabs[:increment]
+    return new_add_vocabs
 
 
 def build_target_size_vocab(increment, texts, present_tokenizer, remover=True):
@@ -93,7 +116,7 @@ def build_target_size_vocab(increment, texts, present_tokenizer, remover=True):
     tmp_tokenizer.train_from_iterator(texts, trainer)
 
     freq = Counter()
-    for text in texts:
+    for text in tqdm(texts):
         output = tmp_tokenizer.encode(text)
         freq.update(output.tokens)
 
@@ -101,13 +124,14 @@ def build_target_size_vocab(increment, texts, present_tokenizer, remover=True):
     add_vocabs = remove_partial_vocab(add_vocabs, present_vocab, increment, remover)
 
     # to alling order of present_vocab, re-assign vocab as list.
-    present_vocab = list(present_tokenizer.vocab)
+    present_vocab = [v for v, i in sorted(present_tokenizer.vocab.items(), key=lambda x: x[1])]
     vocabs = present_vocab + add_vocabs
     vocab_file = tempfile.NamedTemporaryFile()
     with open(vocab_file.name, "w") as f:
         for v in vocabs:
             print(v, file=f)
 
+    del freq
     return vocab_file, prev_vocab_size
 
 
@@ -126,8 +150,9 @@ def main(args):
     out_dir = Path(args.output)
     present_tokenizer = BertTokenizerFast.from_pretrained(args.tokenizer_path)
     texts = []
+    corpus_type = args.corpus_type
 
-    if args.corpus_type == "search":
+    if corpus_type == "search":
         with input_file.open(mode="r") as f:
             for line in tqdm(f):
                 jline = json.loads(line)
@@ -136,7 +161,7 @@ def main(args):
                     text = text.lower()
                 texts.append(text)
 
-    elif args.corpus_type == "raw":
+    elif corpus_type == "raw":
         with input_file.open(mode="r") as f:
             for line in tqdm(f):
                 if not line:
@@ -164,6 +189,10 @@ def main(args):
     else:
         out_dir = os.path.join(out_dir, "raw")
 
+    tk_outpath = os.path.join(out_dir, str(len(present_tokenizer.get_vocab())))
+    os.makedirs(tk_outpath, exist_ok=True)
+    present_tokenizer.save_pretrained(tk_outpath)
+
     scores = dict()
     increment = args.increment
     # vocab_size = len(present_tokenizer.get_vocab())
@@ -177,12 +206,16 @@ def main(args):
     vocab_file, prev_vocab_size = build_target_size_vocab(increment, texts, present_tokenizer, args.remover)
     present_tokenizer = BertTokenizerFast(vocab_file.name, do_lower_case=True)
     update_vocab_size = len(present_tokenizer.vocab)
-    score, df, idf = calc_score_and_weight(texts, present_tokenizer)
-    scores[update_vocab_size] = score
     tk_outpath = os.path.join(out_dir, str(update_vocab_size))
     os.makedirs(tk_outpath, exist_ok=True)
     present_tokenizer.save_pretrained(tk_outpath)
-    weight_save(tk_outpath, df, idf)
+
+    if corpus_type == "search":
+        score, df, idf = calc_score_and_weight(texts, present_tokenizer)
+        weight_save(tk_outpath, df, idf)
+    else:
+        score = calc_score_less_memory(texts, present_tokenizer)
+    scores[update_vocab_size] = score
 
     print(update_vocab_size, prev_vocab_size)
     with open(os.path.join(tk_outpath, "scores.json"), "w") as f:

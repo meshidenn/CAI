@@ -14,7 +14,7 @@ from beir import util, LoggingHandler
 from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval.evaluation import EvaluateRetrieval
 
-from models import Splade, BEIRSpladeModel, BEIRSpladeModelIDF
+from splade_vocab.models import Splade, BEIRSpladeModel, BEIRSpladeModelIDF
 
 
 def calc_idf_and_doclen(corpus, tokenizer, sep):
@@ -36,7 +36,7 @@ def calc_idf_and_doclen(corpus, tokenizer, sep):
 
 
 def main(args):
-    print(args.load_weight, args.weight_sqrt)
+    # print(args.load_weight, args.weight_sqrt)
     model = Splade(args.model_type_or_dir, load_weight=args.load_weight, weight_sqrt=args.weight_sqrt)
     model.eval()
 
@@ -68,7 +68,7 @@ def main(args):
         out_results[k] = res
         print("{} model result for {}:".format(k, dataset), res, flush=True)
 
-    os.makedirs(os.path.join(data_path, "result", args.out_name), exist_ok=True)
+    os.makedirs(os.path.join(args.out_dir, "result", args.out_name), exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(out_results, f)
 
@@ -79,6 +79,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_type_or_dir")
     parser.add_argument("--data_dir")
     parser.add_argument("--dataset")
+    parser.add_argument("--out_dir")
     parser.add_argument("--out_name", default="gen_q")
     parser.add_argument("--load_weight", type=strtobool)
     parser.add_argument("--weight_sqrt", type=strtobool)
