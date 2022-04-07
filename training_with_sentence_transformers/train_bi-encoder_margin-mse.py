@@ -101,7 +101,7 @@ logging.info("Read corpus: collection.tsv")
 with open(collection_filepath, "r", encoding="utf8") as fIn:
     for line in fIn:
         pid, passage = line.strip().split("\t")
-        # pid = int(pid)
+        pid = int(pid)
         corpus[pid] = passage
 
 
@@ -121,7 +121,7 @@ if not os.path.exists(queries_filepath):
 with open(queries_filepath, "r", encoding="utf8") as fIn:
     for line in fIn:
         qid, query = line.strip().split("\t")
-        # qid = int(qid)
+        qid = int(qid)
         queries[qid] = query
 
 
@@ -135,9 +135,9 @@ if not os.path.exists(ce_scores_file):
         ce_scores_file,
     )
 
-# logging.info("Load CrossEncoder scores dict")
-# with gzip.open(ce_scores_file, "rb") as fIn:
-#     ce_scores = pickle.load(fIn)
+logging.info("Load CrossEncoder scores dict")
+with gzip.open(ce_scores_file, "rb") as fIn:
+    ce_scores = pickle.load(fIn)
 
 # As training data we use hard-negatives that have been mined using various systems
 hard_negatives_filepath = os.path.join(data_folder, "msmarco-hard-negatives.jsonl.gz")
@@ -160,17 +160,16 @@ with gzip.open(hard_negatives_filepath, "rt") as fIn:
         data = json.loads(line)
 
         # Get the positive passage ids
-        pos_infos = data["pos"]
+        pos_pids = data["pos"]
 
         # Get the hard negatives
         neg_pids = set()
-        neg_infos = list()
         if negs_to_use is None:
             if args.negs_to_use is not None:  # Use specific system for negatives
                 negs_to_use = args.negs_to_use.split(",")
             else:  # Use all systems
                 negs_to_use = list(data["neg"].keys())
-            logging.info(f"Using negatives from the following systems: {negs_to_use}")
+            logging.info("Using negatives from the following systems:{}".format(negs_to_use))
 
         for system_name in negs_to_use:
             if system_name not in data["neg"]:
@@ -178,32 +177,29 @@ with gzip.open(hard_negatives_filepath, "rt") as fIn:
 
             system_negs = data["neg"][system_name]
             negs_added = 0
-            for pid_info in system_negs:
-                pid = pid_info["pid"]
+            for pid in system_negs:
                 if pid not in neg_pids:
                     neg_pids.add(pid)
-                    neg_infos.append(pid_info)
                     negs_added += 1
                     if negs_added >= num_negs_per_system:
                         break
 
-        if args.use_all_queries or (len(pos_infos) > 0 and len(neg_pids) > 0):
+        if args.use_all_queries or (len(pos_pids) > 0 and len(neg_pids) > 0):
             train_queries[data["qid"]] = {
                 "qid": data["qid"],
                 "query": queries[data["qid"]],
-                "pos": pos_infos,
-                "neg": neg_infos,
+                "pos": pos_pids,
+                "neg": neg_pids,
             }
 
-logging.info("Train queries: {}".format(len(train_queries)))
-
-# We create a custom MSMARCO dataset that returns triplets (query, positive, negative)
+# We create a custom MS MARCO dataset that returns triplets (query, positive, negative)
 # on-the-fly based on the information from the mined-hard-negatives jsonl file.
 class MSMARCODataset(Dataset):
-    def __init__(self, queries, corpus):
+    def __init__(self, queries, corpus, ce_scores):
         self.queries = queries
         self.queries_ids = list(queries.keys())
         self.corpus = corpus
+        self.ce_scores = ce_scores
 
         for qid in self.queries:
             self.queries[qid]["pos"] = list(self.queries[qid]["pos"])
@@ -216,24 +212,21 @@ class MSMARCODataset(Dataset):
         qid = query["qid"]
 
         if len(query["pos"]) > 0:
-            pos_info = query["pos"].pop(0)
-            pos_id = pos_info["pid"]  # Pop positive and add at end
-            pos_score = pos_info["ce-score"]
+            pos_id = query["pos"].pop(0)  # Pop positive and add at end
             pos_text = self.corpus[pos_id]
-            query["pos"].append(pos_info)
+            query["pos"].append(pos_id)
         else:  # We only have negatives, use two negs
-            pos_info = query["neg"].pop(0)  # Pop negative and add at end
-            pos_id = pos_info["pid"]  # Pop positive and add at end
-            pos_score = pos_info["ce-score"]
+            pos_id = query["neg"].pop(0)  # Pop negative and add at end
             pos_text = self.corpus[pos_id]
-            query["neg"].append(pos_info)
+            query["neg"].append(pos_id)
 
         # Get a negative passage
-        neg_info = query["neg"].pop(0)  # Pop negative and add at end
-        neg_id = neg_info["pid"]
-        neg_score = neg_info["ce-score"]
+        neg_id = query["neg"].pop(0)  # Pop negative and add at end
         neg_text = self.corpus[neg_id]
-        query["neg"].append(neg_info)
+        query["neg"].append(neg_id)
+
+        pos_score = self.ce_scores[qid][pos_id]
+        neg_score = self.ce_scores[qid][neg_id]
 
         return InputExample(texts=[query_text, pos_text, neg_text], label=pos_score - neg_score)
 
@@ -241,8 +234,96 @@ class MSMARCODataset(Dataset):
         return len(self.queries)
 
 
+# with gzip.open(hard_negatives_filepath, "rt") as fIn:
+#     for line in tqdm.tqdm(fIn):
+#         if max_passages > 0 and len(train_queries) >= max_passages:
+#             break
+#         data = json.loads(line)
+
+#         # Get the positive passage ids
+#         pos_infos = data["pos"]
+
+#         # Get the hard negatives
+#         neg_pids = set()
+#         neg_infos = list()
+#         if negs_to_use is None:
+#             if args.negs_to_use is not None:  # Use specific system for negatives
+#                 negs_to_use = args.negs_to_use.split(",")
+#             else:  # Use all systems
+#                 negs_to_use = list(data["neg"].keys())
+#             logging.info(f"Using negatives from the following systems: {negs_to_use}")
+
+#         for system_name in negs_to_use:
+#             if system_name not in data["neg"]:
+#                 continue
+
+#             system_negs = data["neg"][system_name]
+#             negs_added = 0
+#             for pid_info in system_negs:
+#                 pid = pid_info["pid"]
+#                 if pid not in neg_pids:
+#                     neg_pids.add(pid)
+#                     neg_infos.append(pid_info)
+#                     negs_added += 1
+#                     if negs_added >= num_negs_per_system:
+#                         break
+
+#         if args.use_all_queries or (len(pos_infos) > 0 and len(neg_pids) > 0):
+#             train_queries[data["qid"]] = {
+#                 "qid": data["qid"],
+#                 "query": queries[data["qid"]],
+#                 "pos": pos_infos,
+#                 "neg": neg_infos,
+#             }
+
+# logging.info("Train queries: {}".format(len(train_queries)))
+
+# # We create a custom MSMARCO dataset that returns triplets (query, positive, negative)
+# # on-the-fly based on the information from the mined-hard-negatives jsonl file.
+# class MSMARCODataset(Dataset):
+#     def __init__(self, queries, corpus):
+#         self.queries = queries
+#         self.queries_ids = list(queries.keys())
+#         self.corpus = corpus
+
+#         for qid in self.queries:
+#             self.queries[qid]["pos"] = list(self.queries[qid]["pos"])
+#             self.queries[qid]["neg"] = list(self.queries[qid]["neg"])
+#             random.shuffle(self.queries[qid]["neg"])
+
+#     def __getitem__(self, item):
+#         query = self.queries[self.queries_ids[item]]
+#         query_text = query["query"]
+#         qid = query["qid"]
+
+#         if len(query["pos"]) > 0:
+#             pos_info = query["pos"].pop(0)
+#             pos_id = pos_info["pid"]  # Pop positive and add at end
+#             pos_score = pos_info["ce-score"]
+#             pos_text = self.corpus[pos_id]
+#             query["pos"].append(pos_info)
+#         else:  # We only have negatives, use two negs
+#             pos_info = query["neg"].pop(0)  # Pop negative and add at end
+#             pos_id = pos_info["pid"]  # Pop positive and add at end
+#             pos_score = pos_info["ce-score"]
+#             pos_text = self.corpus[pos_id]
+#             query["neg"].append(pos_info)
+
+#         # Get a negative passage
+#         neg_info = query["neg"].pop(0)  # Pop negative and add at end
+#         neg_id = neg_info["pid"]
+#         neg_score = neg_info["ce-score"]
+#         neg_text = self.corpus[neg_id]
+#         query["neg"].append(neg_info)
+
+#         return InputExample(texts=[query_text, pos_text, neg_text], label=pos_score - neg_score)
+
+#     def __len__(self):
+#         return len(self.queries)
+
+
 # For training the SentenceTransformer model, we need a dataset, a dataloader, and a loss used for training.
-train_dataset = MSMARCODataset(queries=train_queries, corpus=corpus)
+train_dataset = MSMARCODataset(queries=train_queries, corpus=corpus, ce_scores=ce_scores)
 train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=train_batch_size, drop_last=True)
 train_loss = losses.MarginMSELoss(model=model)
 
