@@ -181,6 +181,7 @@ def train(
             pooling=pooling,
             sep=sep,
             k_values=k_values,
+            model_type=args.train_model_type,
         )
 
 
