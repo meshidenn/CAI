@@ -42,9 +42,8 @@ def main(args):
 
     tokenizer = model.tokenizer
     dataset = args.dataset
-    data_path = os.path.join(args.data_dir, dataset)
-
-    out_path = os.path.join(data_path, "result.json")
+    
+    out_path = os.path.join(args.out_dir, "result.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
     # idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     # calc_models = {
