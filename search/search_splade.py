@@ -65,7 +65,7 @@ def main(args):
         results2 = EvaluateRetrieval.evaluate_custom(qrels, results, [1, 10, 100, 1000], metric="r_cap")
         res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"], "R_cap@100": results2["R_cap@100"]}
         out_results[k] = res
-        print("{} model result for {}:".format(k, dataset), res, flush=True)
+        print("{} model result:".format(k), res, flush=True)
 
     with open(out_path, "w") as f:
         json.dump(out_results, f)
