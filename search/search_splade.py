@@ -42,9 +42,10 @@ def main(args):
 
     tokenizer = model.tokenizer
     dataset = args.dataset
-    
+    data_dir = args.data_dir
+
     out_path = os.path.join(args.out_dir, "result.json")
-    corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
+    corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="test")
     # idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     # calc_models = {
     #     "org": BEIRSpladeModel(model, tokenizer),
