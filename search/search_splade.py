@@ -41,7 +41,6 @@ def main(args):
     model.eval()
 
     tokenizer = model.tokenizer
-    dataset = args.dataset
     data_dir = args.data_dir
 
     out_path = os.path.join(args.out_dir, "result.json")
@@ -77,7 +76,6 @@ if __name__ == "__main__":
 
     parser.add_argument("--model_type_or_dir")
     parser.add_argument("--data_dir")
-    parser.add_argument("--dataset")
     parser.add_argument("--out_dir")
     parser.add_argument("--load_weight", type=strtobool)
     parser.add_argument("--weight_sqrt", type=strtobool)
