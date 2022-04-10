@@ -61,10 +61,11 @@ def main(args):
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_type_or_dir)
     dataset = args.dataset
-    data_path = os.path.join(args.data_dir, dataset)
+    data_dir = args.data_dir
 
-    out_path = os.path.join(data_path, "result", args.out_name, "result.json")
-    corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
+    # out_path = os.path.join(data_path, "result", args.out_name, "result.json")
+    out_path = os.path.join(args.out_dir, "result.json")
+    corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="test")
     # idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     calc_models = {"org": BEIRSbert(model, tokenizer)}
 
@@ -80,7 +81,6 @@ def main(args):
         out_results[k] = res
         print("{} model result for {}:".format(k, dataset), res, flush=True)
 
-    os.makedirs(os.path.join(data_path, "result", args.out_name), exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(out_results, f)
 
@@ -90,8 +90,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--model_type_or_dir")
     parser.add_argument("--data_dir")
-    parser.add_argument("--dataset")
-    parser.add_argument("--out_name", default="gen_q")
+    parser.add_argument("--out_dir")
     parser.add_argument("--outer_weight", type=strtobool)
 
     args = parser.parse_args()
