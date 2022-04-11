@@ -22,6 +22,7 @@ logging.basicConfig(
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_path")
 parser.add_argument("--dataset")
+parser.add_argumwnt("--model_save_path")
 parser.add_argument("--out_suffix", default="")
 parser.add_argument("--with_weight", default=False, type=strtobool)
 parser.add_argument("--train_batch_size", default=64, type=int)
@@ -81,17 +82,7 @@ except ValueError:
     ir_evaluator = retriever.load_dummy_evaluator()
 
 #### Provide model save path
-if args.out_suffix:
-    if args.with_weight:
-        model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ-{}-{}".format(args.out_suffix, "weight"))
-    else:
-        model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ-{}".format(args.out_suffix))
-else:
-    if args.with_weight:
-        model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ-weight")
-    else:
-        model_save_path = os.path.join(data_path, "new_model", "splade", "GenQ")
-
+model_save_path = args.model_save_path
 os.makedirs(model_save_path, exist_ok=True)
 
 #### Configure Train params
