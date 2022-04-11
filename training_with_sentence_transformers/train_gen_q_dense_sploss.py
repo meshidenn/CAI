@@ -206,9 +206,10 @@ def main(args):
     set_seed(args.seed)
 
     #### Download nfcorpus.zip dataset and unzip the dataset
-    dataset = args.dataset
+    # dataset = args.dataset
     prefix = "gen-5"
-    data_path = os.path.join(args.data_path, dataset)
+    # data_path = os.path.join(args.data_path, dataset)
+    data_path = args.data_path
 
     #### Training on Generated Queries ####
     corpus, gen_queries, gen_qrels = GenericDataLoader(data_path, prefix=prefix).load(split="train")
@@ -236,7 +237,8 @@ def main(args):
         ir_evaluator = retriever.load_dummy_evaluator()
 
     #### Provide model save path
-    model_save_path = gen_save_model_path(args, data_path)
+    # model_save_path = gen_save_model_path(args, data_path)
+    model_save_path = args.model_save_path
 
     #### Configure Train params
     num_epochs = args.epochs
@@ -257,7 +259,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_path")
-    parser.add_argument("--dataset")
+    # parser.add_argument("--dataset")
+    parser.add_argument("--model_save_path")
     parser.add_argument("--model_type", help="save moadel type")
     parser.add_argument("--ir_type", help="(dense or tas-b) or (sparse or splade)")
     parser.add_argument("--out_suffix", default="")
