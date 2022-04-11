@@ -206,9 +206,9 @@ def main(args):
     set_seed(args.seed)
 
     #### Download nfcorpus.zip dataset and unzip the dataset
-    dataset = args.dataset
+    # dataset = args.dataset
     prefix = "gen-5"
-    data_path = os.path.join(args.data_path, dataset)
+    # data_path = os.path.join(args.data_path, dataset)
     data_path = args.data_path
 
     #### Training on Generated Queries ####
