@@ -10,6 +10,7 @@ import json
 from typing import List
 import argparse
 from .sbert import load_sbert
+from splade_vocab.models import Splade, BEIRSpladeModel
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ def evaluate(
             sbert.doc_model = model
             model = DRES(sbert, batch_size=16)
         elif model_type == "splade":
-            splade = Splade(model_name)
+            splade = Splade(model_name_or_path)
             tokenizer = splade.tokenizer
             beir_model = BEIRSpladeModel(model, tokenizer)
             model = DRES(beir_model, batch_size=16)
