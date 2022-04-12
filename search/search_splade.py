@@ -60,7 +60,7 @@ def main(args):
     out_results = {}
     for k in calc_models:
         beir_splade = calc_models[k]
-        dres = DRES(beir_splade, batch_size=args.batch_size)
+        dres = DRES(beir_splade, batch_size=args.batch_size, corpus_chunk_size=args.corpus_chunk_size)
         retriever = EvaluateRetrieval(dres, score_function="dot", k_values=k_values)
         results = retriever.retrieve(corpus, queries)
         ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, k_values)
@@ -82,6 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--load_weight", type=strtobool)
     parser.add_argument("--weight_sqrt", type=strtobool)
     parser.add_argument("--batch_size", default=128, type=int)
+    parser.add_argument("--corpus_chunk_size", default=50000, type=int)
 
     args = parser.parse_args()
 
