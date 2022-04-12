@@ -55,14 +55,16 @@ def main(args):
         "org": BEIRSpladeModel(model, tokenizer),
     }
 
+    k_values = [1, 10, 100]
+
     out_results = {}
     for k in calc_models:
         beir_splade = calc_models[k]
         dres = DRES(beir_splade, batch_size=args.batch_size)
-        retriever = EvaluateRetrieval(dres, score_function="dot")
+        retriever = EvaluateRetrieval(dres, score_function="dot", k_values=k_values)
         results = retriever.retrieve(corpus, queries)
-        ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, [1, 10, 100, 1000])
-        results2 = EvaluateRetrieval.evaluate_custom(qrels, results, [1, 10, 100, 1000], metric="r_cap")
+        ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, k_values)
+        results2 = EvaluateRetrieval.evaluate_custom(qrels, results, k_values, metric="r_cap")
         res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"], "R_cap@100": results2["R_cap@100"]}
         out_results[k] = res
         print("{} model result:".format(k), res, flush=True)
