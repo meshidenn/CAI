@@ -58,7 +58,7 @@ def main(args):
     out_results = {}
     for k in calc_models:
         beir_splade = calc_models[k]
-        dres = DRES(beir_splade)
+        dres = DRES(beir_splade, batch_size=args.batch_size)
         retriever = EvaluateRetrieval(dres, score_function="dot")
         results = retriever.retrieve(corpus, queries)
         ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, [1, 10, 100, 1000])
@@ -79,6 +79,7 @@ if __name__ == "__main__":
     parser.add_argument("--out_dir")
     parser.add_argument("--load_weight", type=strtobool)
     parser.add_argument("--weight_sqrt", type=strtobool)
+    parser.add_argument("--batch_size", default=128, type=int)
 
     args = parser.parse_args()
 
