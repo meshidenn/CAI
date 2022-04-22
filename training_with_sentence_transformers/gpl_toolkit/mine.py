@@ -89,7 +89,7 @@ class NegativeMiner(object):
         splade.eval()
         docs = list(map(self._get_doc, self.corpus.keys()))
         dids = np.array(list(self.corpus.keys()))
-        batch_size = 64
+        batch_size = 48
         doc_embs = splade.encode_sentence_bert(
             docs,
             batch_size=batch_size,

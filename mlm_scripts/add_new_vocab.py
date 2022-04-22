@@ -8,7 +8,7 @@ from collections import Counter
 from pathlib import Path
 from tqdm import tqdm
 import numpy as np
-from transformers import AutoTokenizer, BertTokenizerFast
+from transformers import AutoTokenizer, BertTokenizerFast, DistilBertTokenizerFast
 from tokenizers import Tokenizer, normalizers
 from tokenizers.models import WordPiece
 from tokenizers.normalizers import Lowercase, NFD, StripAccents
@@ -148,7 +148,13 @@ def weight_save(outpath, df, idf):
 def main(args):
     input_file = Path(args.input)
     out_dir = Path(args.output)
-    present_tokenizer = BertTokenizerFast.from_pretrained(args.tokenizer_path)
+    if args.tokenizer_path == "bert-base-uncased":
+        base_tokenizer = BertTokenizerFast
+    elif args.tokenizer_path == "distilbert-base-uncased":
+        base_tokenizer = DistilBertTokenizerFast
+
+    present_tokenizer = base_tokenizer.from_pretrained(args.tokenizer_path)
+
     texts = []
     corpus_type = args.corpus_type
 
@@ -204,7 +210,7 @@ def main(args):
     # scores[vocab_size] = score
 
     vocab_file, prev_vocab_size = build_target_size_vocab(increment, texts, present_tokenizer, args.remover)
-    present_tokenizer = BertTokenizerFast(vocab_file.name, do_lower_case=True)
+    present_tokenizer = base_tokenizer(vocab_file.name, do_lower_case=True)
     update_vocab_size = len(present_tokenizer.vocab)
     tk_outpath = os.path.join(out_dir, str(update_vocab_size))
     os.makedirs(tk_outpath, exist_ok=True)
