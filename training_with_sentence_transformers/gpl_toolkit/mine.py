@@ -97,7 +97,6 @@ class NegativeMiner(object):
             convert_to_numpy=True,
             convert_to_tensor=False,
             normalize_embeddings=False,
-            maxlen=300,
         )
         doc_embs = torch.from_numpy(doc_embs.astype(np.float32))
         qids = list(self.gen_qrels.keys())
