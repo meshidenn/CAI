@@ -89,16 +89,16 @@ class NegativeMiner(object):
         splade.eval()
         docs = list(map(self._get_doc, self.corpus.keys()))
         dids = np.array(list(self.corpus.keys()))
-        batch_size = 64
-        doc_embs = splade.encode_sentence_bert(
-            docs,
-            batch_size=batch_size,
-            show_progress_bar=True,
-            convert_to_numpy=True,
-            convert_to_tensor=False,
-            normalize_embeddings=False,
-        )
-        doc_embs = torch.from_numpy(doc_embs.astype(np.float32))
+        batch_size = 128
+        # doc_embs = splade.encode_sentence_bert(
+        #     docs,
+        #     batch_size=batch_size,
+        #     show_progress_bar=True,
+        #     convert_to_numpy=True,
+        #     convert_to_tensor=False,
+        #     normalize_embeddings=False,
+        # )
+        # doc_embs = torch.from_numpy(doc_embs.astype(np.float32))
         qids = list(self.gen_qrels.keys())
         queries = list(map(lambda qid: self.gen_queries[qid], qids))
         for start in tqdm.trange(0, len(queries), batch_size):
@@ -110,15 +110,25 @@ class NegativeMiner(object):
                 convert_to_tensor=True,
                 normalize_embeddings=False,
             )
-            score_mtrx = torch.matmul(qemb_batch, doc_embs.t())  # (qsize, dsize)
-            _, indices_topk = score_mtrx.topk(k=self.nneg, dim=-1)
-            indices_topk = indices_topk.tolist()
-            for qid, neg_dids in zip(qid_batch, indices_topk):
-                neg_dids = dids[neg_dids].tolist()
-                for pos_did in self.gen_qrels[qid]:
-                    if pos_did in neg_dids:
-                        neg_dids.remove(pos_did)
-                result[qid] = neg_dids
+            for d_start in tqdm.trange(0, len(docs), batch_size):
+                doc_batch = docs[d_start : d_start + batch_size]
+                doc_embs = splade.encode_sentence_bert(
+                    doc_batch,
+                    batch_size=batch_size,
+                    show_progress_bar=True,
+                    convert_to_numpy=False,
+                    convert_to_tensor=True,
+                    normalize_embeddings=False,
+                )
+                score_mtrx = torch.matmul(qemb_batch, doc_embs.t())  # (qsize, dsize)
+                _, indices_topk = score_mtrx.topk(k=self.nneg, dim=-1)
+                indices_topk = indices_topk.tolist()
+                for qid, neg_dids in zip(qid_batch, indices_topk):
+                    neg_dids = dids[neg_dids].tolist()
+                    for pos_did in self.gen_qrels[qid]:
+                        if pos_did in neg_dids:
+                            neg_dids.remove(pos_did)
+                    result[qid] = neg_dids
         return result
 
     def _mine_bm25(self):
