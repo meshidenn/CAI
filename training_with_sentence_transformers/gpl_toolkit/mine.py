@@ -95,10 +95,11 @@ class NegativeMiner(object):
             batch_size=batch_size,
             show_progress_bar=True,
             convert_to_numpy=True,
-            convert_to_tensor=True,
+            convert_to_tensor=False,
             normalize_embeddings=False,
             maxlen=300,
         )
+        doc_embs = torch.from_numpy(doc_embs.astype(np.float32))
         qids = list(self.gen_qrels.keys())
         queries = list(map(lambda qid: self.gen_queries[qid], qids))
         for start in tqdm.trange(0, len(queries), batch_size):
@@ -106,7 +107,7 @@ class NegativeMiner(object):
             qemb_batch = splade.encode_sentence_bert(
                 queries[start : start + batch_size],
                 show_progress_bar=False,
-                convert_to_numpy=True,
+                convert_to_numpy=False,
                 convert_to_tensor=True,
                 normalize_embeddings=False,
             )
