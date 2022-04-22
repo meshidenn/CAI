@@ -89,17 +89,8 @@ class NegativeMiner(object):
         splade.eval()
         docs = list(map(self._get_doc, self.corpus.keys()))
         dids = np.array(list(self.corpus.keys()))
-        q_batch_size = 1024
+        q_batch_size = 65536
         d_batch_size = 128
-        # doc_embs = splade.encode_sentence_bert(
-        #     docs,
-        #     batch_size=batch_size,
-        #     show_progress_bar=True,
-        #     convert_to_numpy=True,
-        #     convert_to_tensor=False,
-        #     normalize_embeddings=False,
-        # )
-        # doc_embs = torch.from_numpy(doc_embs.astype(np.float32))
         qids = list(self.gen_qrels.keys())
         queries = list(map(lambda qid: self.gen_queries[qid], qids))
         for start in tqdm.trange(0, len(queries), q_batch_size):
