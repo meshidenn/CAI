@@ -97,6 +97,7 @@ class NegativeMiner(object):
             convert_to_numpy=True,
             convert_to_tensor=True,
             normalize_embeddings=False,
+            maxlen=300,
         )
         qids = list(self.gen_qrels.keys())
         queries = list(map(lambda qid: self.gen_queries[qid], qids))
