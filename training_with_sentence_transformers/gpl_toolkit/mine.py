@@ -52,10 +52,10 @@ class NegativeMiner(object):
         sbert = SentenceTransformer(model_name)
         docs = list(map(self._get_doc, self.corpus.keys()))
         dids = np.array(list(self.corpus.keys()))
-        batch_size = 64
+        batch_size = 128
         doc_embs = sbert.encode(
             docs,
-            batch_size=batch_size
+            batch_size=batch_size,
             show_progress_bar=True,
             convert_to_numpy=False,
             convert_to_tensor=True,
@@ -102,6 +102,7 @@ class NegativeMiner(object):
                 convert_to_numpy=False,
                 convert_to_tensor=True,
                 normalize_embeddings=False,
+                maxlen=64,
             )
             score_mtrxs = []
             for d_start in tqdm.trange(0, len(docs), d_batch_size):
