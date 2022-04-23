@@ -101,6 +101,26 @@ class BEIRSpladeModel:
         return self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
 
 
+class BEIRSpladeTKModel:
+    def __init__(self, model, tokenizer, max_length=256):
+        self.max_length = max_length
+        self.tokenizer = tokenizer
+        self.model = model
+
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
+        X = torch.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        for i_query in i_queries:
+            X[:, i_query] += 1
+        return X
+
+    # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        return self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
+
+
 class Splade(nn.Module):
     def __init__(
         self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, load_weight=False, weight_sqrt=False, **kwargs
