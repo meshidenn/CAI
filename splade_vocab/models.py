@@ -10,8 +10,10 @@ from typing import List, Dict, Union, Optional, Tuple
 from dataclasses import dataclass
 
 import numpy as np
+import scipy as sp
 import torch
 from numpy import ndarray
+from scipy.sparse import csr_matrix
 from torch import Tensor, nn
 from tqdm.autonotebook import trange
 from transformers import AutoModel, AutoModelForMaskedLM, AutoTokenizer, AutoConfig
@@ -202,6 +204,7 @@ class Splade(nn.Module):
         show_progress_bar: bool = None,
         output_value: str = "sentence_embedding",
         convert_to_numpy: bool = True,
+        convert_to_spsparse: bool = False,
         convert_to_tensor: bool = False,
         device: str = None,
         normalize_embeddings: bool = False,
@@ -215,6 +218,7 @@ class Splade(nn.Module):
         :param show_progress_bar: Output a progress bar when encode sentences
         :param output_value:  Default sentence_embedding, to get sentence embeddings. Can be set to token_embeddings to get wordpiece token embeddings.
         :param convert_to_numpy: If true, the output is a list of numpy vectors. Else, it is a list of pytorch tensors.
+        :param convert_to_numpy: If true, the output is a list of sparse vectors. It is necessary convert_to_numpy is True.
         :param convert_to_tensor: If true, you get one large tensor as return. Overwrites any setting from convert_to_numpy
         :param device: Which torch.device to use for the computation
         :param normalize_embeddings: If set to true, returned vectors will have length 1. In that case, the faster dot-product (util.dot_score) instead of cosine similarity can be used.
@@ -280,13 +284,18 @@ class Splade(nn.Module):
                         embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
                     # fixes for #522 and #487 to avoid oom problems on gpu with large datasets
                     if convert_to_numpy:
-                        embeddings = embeddings.cpu()
+                        embeddings = embeddings.cpu().numpy()
+                        if convert_to_spsparse:
+                            embeddings = csr_matrix(embeddings)
                 all_embeddings.extend(embeddings)
         all_embeddings = [all_embeddings[idx] for idx in np.argsort(length_sorted_idx)]
         if convert_to_tensor:
             all_embeddings = torch.stack(all_embeddings)
         elif convert_to_numpy:
-            all_embeddings = np.asarray([emb.numpy() for emb in all_embeddings])
+            if convert_to_spsparse:
+                all_embeddings = sp.sparse.vstack(all_embeddings)
+            else:
+                all_embeddings = np.vstack(all_embeddings)
         if input_was_string:
             all_embeddings = all_embeddings[0]
         return all_embeddings

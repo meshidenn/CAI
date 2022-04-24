@@ -90,8 +90,49 @@ class NegativeMiner(object):
         splade.eval()
         docs = list(map(self._get_doc, self.corpus.keys()))
         dids = np.array(list(self.corpus.keys()))
-        q_batch_size = 4096
-        d_batch_size = 128
+        batch_size = 64
+        doc_embs = splade.encode_sentence_bert(
+            docs,
+            batch_size=batch_size,
+            show_progress_bar=True,
+            convert_to_numpy=True,
+            convert_to_spsparse=True,
+            convert_to_tensor=False,
+            normalize_embeddings=False,
+        )
+        qids = list(self.gen_qrels.keys())
+        queries = list(map(lambda qid: self.gen_queries[qid], qids))
+        for start in tqdm.trange(0, len(queries), batch_size):
+            qid_batch = qids[start : start + batch_size]
+            qemb_batch = splade.encode_sentence_bert(
+                queries[start : start + batch_size],
+                show_progress_bar=False,
+                convert_to_numpy=True,
+                convert_to_spsparse=True,
+                convert_to_tensor=False,
+                normalize_embeddings=True,
+            )
+            score_mtrx = qemb_batch @ doc_embs.T  # (qsize, dsize)
+            score_mtrx = torch.from_numpy(score_mtrx.toarray())
+            _, indices_topk = score_mtrx.topk(k=self.nneg, dim=-1)
+            indices_topk = indices_topk.tolist()
+            for qid, neg_dids in zip(qid_batch, indices_topk):
+                neg_dids = dids[neg_dids].tolist()
+                for pos_did in self.gen_qrels[qid]:
+                    if pos_did in neg_dids:
+                        neg_dids.remove(pos_did)
+                result[qid] = neg_dids
+        return result
+
+    def _mine_splade_dense(self, model_name):
+        logger.info(f"Mining with {model_name}")
+        result = {}
+        splade = Splade(model_name)
+        splade.eval()
+        docs = list(map(self._get_doc, self.corpus.keys()))
+        dids = np.array(list(self.corpus.keys()))
+        q_batch_size = 1536
+        d_batch_size = 64
         qids = list(self.gen_qrels.keys())
         queries = list(map(lambda qid: self.gen_queries[qid], qids))
         for start in tqdm.trange(0, len(queries), q_batch_size):
@@ -117,7 +158,7 @@ class NegativeMiner(object):
                 )
                 score_mtrx = torch.matmul(qemb_batch, doc_embs.t())  # (qsize, dsize)
                 score_mtrxs.append(score_mtrx)
-            score_mtrx = torch.cat(score_mtrxs, dim=1)
+            score_mtrx = torch.cat(score_mtrxs, dim=1).cpu()
             _, indices_topk = score_mtrx.topk(k=self.nneg, dim=-1)
             indices_topk = indices_topk.tolist()
             for qid, neg_dids in zip(qid_batch, indices_topk):
