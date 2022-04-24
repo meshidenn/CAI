@@ -67,7 +67,7 @@ def evaluate(
         elif model_type == "splade":
             splade = Splade(model_name_or_path)
             tokenizer = splade.tokenizer
-            beir_model = BEIRSpladeModel(model, tokenizer)
+            beir_model = BEIRSpladeModel(splade, tokenizer)
             model = DRES(beir_model, batch_size=16)
 
         assert score_function in ["dot", "cos_sim"]

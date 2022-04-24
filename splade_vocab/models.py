@@ -111,8 +111,8 @@ class BEIRSpladeTKModel:
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
         X = torch.zeros(len(queries), len(self.tokenizer.get_vocab()))
-        for i_query in i_queries:
-            X[:, i_query] += 1
+        for i, i_query in enumerate(i_queries):
+            X[i, i_query] += 1
         return X
 
     # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
