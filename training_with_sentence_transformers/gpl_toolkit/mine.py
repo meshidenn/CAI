@@ -112,7 +112,7 @@ class NegativeMiner(object):
                 convert_to_numpy=True,
                 convert_to_spsparse=True,
                 convert_to_tensor=False,
-                normalize_embeddings=True,
+                normalize_embeddings=False,
                 maxlen=64,
             )
             score_mtrx = qemb_batch @ doc_embs.T  # (qsize, dsize)
