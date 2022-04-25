@@ -107,7 +107,7 @@ class NegativeMiner(object):
             qid_batch = qids[start : start + q_batch_size]
             qemb_batch = splade.encode_sentence_bert(
                 queries[start : start + q_batch_size],
-                batch_size=q_batch_size
+                batch_size=q_batch_size,
                 show_progress_bar=False,
                 convert_to_numpy=True,
                 convert_to_spsparse=True,
