@@ -90,10 +90,11 @@ class NegativeMiner(object):
         splade.eval()
         docs = list(map(self._get_doc, self.corpus.keys()))
         dids = np.array(list(self.corpus.keys()))
-        batch_size = 64
+        d_batch_size = 64
+        q_batch_size = 1024
         doc_embs = splade.encode_sentence_bert(
             docs,
-            batch_size=batch_size,
+            batch_size=d_batch_size,
             show_progress_bar=True,
             convert_to_numpy=True,
             convert_to_spsparse=True,
@@ -102,15 +103,17 @@ class NegativeMiner(object):
         )
         qids = list(self.gen_qrels.keys())
         queries = list(map(lambda qid: self.gen_queries[qid], qids))
-        for start in tqdm.trange(0, len(queries), batch_size):
-            qid_batch = qids[start : start + batch_size]
+        for start in tqdm.trange(0, len(queries), q_batch_size):
+            qid_batch = qids[start : start + q_batch_size]
             qemb_batch = splade.encode_sentence_bert(
-                queries[start : start + batch_size],
+                queries[start : start + q_batch_size],
+                batch_size=q_batch_size
                 show_progress_bar=False,
                 convert_to_numpy=True,
                 convert_to_spsparse=True,
                 convert_to_tensor=False,
                 normalize_embeddings=True,
+                maxlen=64,
             )
             score_mtrx = qemb_batch @ doc_embs.T  # (qsize, dsize)
             score_mtrx = torch.from_numpy(score_mtrx.toarray())
