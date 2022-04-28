@@ -20,6 +20,7 @@ from collections import defaultdict
 from typing import List
 from tqdm import tqdm
 
+from splade_vocab.losses import MultipleNegativesRankingLossSplade
 import models
 
 #### Just some code to print debug information to stdout
@@ -58,12 +59,12 @@ class NegDataset(Dataset):
 
 
 def get_model(args):
-    if args.ir_type in {"dense", "tas-b"}:
+    if args.ir_type in {"dense", "tas-b", "sbert"}:
         return get_dense_model(args)
     elif args.ir_type in {"sparse", "splade"}:
         return get_splade_model(args)
     else:
-        raise ValueError(f"{args.model_type} doesn't exist")
+        raise ValueError(f"{args.ir_type} doesn't exist")
 
 
 def get_dense_model(args):
@@ -85,7 +86,8 @@ def get_dense_model(args):
     else:
         model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
-    return model
+    train_loss = losses.MultipleNegativesRankingLoss(model=model)
+    return model, train_loss
 
 
 def get_splade_model(arg):
@@ -102,8 +104,8 @@ def get_splade_model(arg):
         args.model_name, max_seq_length=args.max_seq_length, weights=word_weights
     )
     model = SentenceTransformer(modules=[word_embedding_model])
-
-    return model
+    train_loss = MultipleNegativesRankingLossSplade(model=model)
+    return model, train_loss
 
 
 def hits_iterator(hits: List):
@@ -214,14 +216,13 @@ def main(args):
     #### Training on Generated Queries ####
     corpus, gen_queries, gen_qrels = GenericDataLoader(data_path, prefix=prefix).load(split="train")
 
-    model = get_model(args)
+    model, train_loss = get_model(args)
 
     #### Provide any sentence-transformers model path
     retriever = TrainRetriever(model=model, batch_size=args.train_batch_size)
 
     #### Prepare training samples
     train_dataloader, warmup_steps = get_dataloader(args, corpus, gen_queries, gen_qrels, retriever)
-    train_loss = losses.MultipleNegativesRankingLoss(model=retriever.model)
 
     try:
         #### Please Note - not all datasets contain a dev split, comment out the line if such the case
@@ -259,7 +260,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_path")
-    # parser.add_argument("--dataset")
     parser.add_argument("--model_save_path")
     parser.add_argument("--model_type", help="save moadel type")
     parser.add_argument("--ir_type", help="(dense or tas-b) or (sparse or splade)")
