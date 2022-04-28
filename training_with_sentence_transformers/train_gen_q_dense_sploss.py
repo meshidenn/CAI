@@ -104,7 +104,7 @@ def get_splade_model(arg):
         args.model_name, max_seq_length=args.max_seq_length, weights=word_weights
     )
     model = SentenceTransformer(modules=[word_embedding_model])
-    train_loss = MultipleNegativesRankingLossSplade(model=model)
+    train_loss = MultipleNegativesRankingLossSplade(model=model, lambda_d=0.08, lambda_q=0.1)
     return model, train_loss
 
 
