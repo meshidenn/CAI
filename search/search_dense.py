@@ -93,7 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_type_or_dir")
     parser.add_argument("--data_dir")
     parser.add_argument("--out_dir")
-    parser.add_argument("--outer_weight", type=strtobool)
+    parser.add_argument("--mode", default="org", help="org.idf,bm25")
 
     args = parser.parse_args()
 
