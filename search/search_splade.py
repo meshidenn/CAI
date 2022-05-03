@@ -14,7 +14,7 @@ from beir import util, LoggingHandler
 from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval.evaluation import EvaluateRetrieval
 
-from splade_vocab.models import Splade, BEIRSpladeModel, BEIRSpladeModelIDF
+from splade_vocab.models import Splade, BEIRSpladeModel, BEIRSpladeModelIDF, BEIRSpladeModelBM25
 
 
 def calc_idf_and_doclen(corpus, tokenizer, sep):
@@ -44,20 +44,19 @@ def main(args):
     data_dir = args.data_dir
 
     out_path = os.path.join(args.out_dir, "result.json")
+    analysis_out_path = os.path.join(args.out_dir, "analysis.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="test")
-    # idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
-    # calc_models = {
-    #     "org": BEIRSpladeModel(model, tokenizer),
-    #     "idf": BEIRSpladeModelIDF(model, tokenizer, idf, sqrt=False),
-    #     "idf_sqrt": BEIRSpladeModelIDF(model, tokenizer, idf),
-    # }
+    idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     calc_models = {
         "org": BEIRSpladeModel(model, tokenizer),
+        "idf": BEIRSpladeModelIDF(model, tokenizer, idf),
+        "bm25": BEIRSpladeModelIDF(model, tokenizer, idf, doc_len_ave),
     }
 
     k_values = [1, 10, 100]
 
     out_results = {}
+    analysis = {}
     for k in calc_models:
         beir_splade = calc_models[k]
         dres = DRES(beir_splade, batch_size=args.batch_size, corpus_chunk_size=args.corpus_chunk_size)
@@ -67,10 +66,14 @@ def main(args):
         results2 = EvaluateRetrieval.evaluate_custom(qrels, results, k_values, metric="r_cap")
         res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"], "R_cap@100": results2["R_cap@100"]}
         out_results[k] = res
+        analysis[k] = results
         print("{} model result:".format(k), res, flush=True)
 
     with open(out_path, "w") as f:
         json.dump(out_results, f)
+
+    with open(analysis_out_path, "w") as f:
+        json.dump(analysis, f)
 
 
 if __name__ == "__main__":

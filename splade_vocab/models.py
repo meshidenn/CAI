@@ -8,6 +8,7 @@ import json
 import logging
 from typing import List, Dict, Union, Optional, Tuple
 from dataclasses import dataclass
+from collections import Counter
 
 import numpy as np
 import scipy as sp
@@ -75,7 +76,6 @@ class BEIRSpladeModelIDF:
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
         X = self.model.encode_sentence_bert(self.tokenizer, queries, is_q=True, maxlen=self.max_length)
-        X *= self.idf
         return X
 
     # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
@@ -83,6 +83,50 @@ class BEIRSpladeModelIDF:
         sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
         X = self.model.encode_sentence_bert(self.tokenizer, sentences, maxlen=self.max_length)
         X *= self.idf
+        return X
+
+
+class BEIRSpladeModelBM25:
+    def __init__(self, model, tokenizer, idf, doc_len_ave, max_length=256, bm25_k1=0.9, bm25_b=0.4):
+        self.max_length = max_length
+        self.tokenizer = tokenizer
+        self.model = model
+        self.idf = self._init_idf(idf)
+        self.bm25_k1 = bm25_k1
+        self.bm25_b = bm25_b
+        self.doc_len_ave = doc_len_ave
+
+    def _init_idf(self, idf):
+        idf_vec = np.ones(len(self.tokenizer.vocab))
+        for k, v in idf.items():
+            if v == 0.0:
+                continue
+            idf_vec[k] = v
+        return idf_vec
+
+    def bm25_tf(self, tf, doc_lens):
+        nume = tf * (1 + self.bm25_k1)
+        denom = tf + self.bm25_k1 * (1 - self.bm25_b + self.bm25_b * doc_lens / self.doc_len_ave)
+        return nume / denom
+
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        X = self.model.encode_sentence_bert(self.tokenizer, queries, is_q=True, maxlen=self.max_length)
+        return X
+
+    # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        X = self.model.encode_sentence_bert(self.tokenizer, sentences, maxlen=self.max_length)
+        input_tfs = np.ones(X.shape)
+        i_sentences = self.tokenizer(sentences, add_special_tokens=False)["input_ids"]
+        for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
+            tf = Counter(input_tokens.tolist())
+            for k, v in tf.items():
+                input_tfs[i, k] *= v
+        doc_lens = np.sum(i_sentences["attention_mask"], axis=1).unsqueeze(-1)
+        tf_weight = self.bm25_tf(input_tfs, doc_lens)
+        X *= tf_weight * self.idf
         return X
 
 
@@ -124,9 +168,7 @@ class BEIRSpladeTKModel:
 
 
 class Splade(nn.Module):
-    def __init__(
-        self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, load_weight=False, weight_sqrt=False, **kwargs
-    ):
+    def __init__(self, model_type_or_dir, lambda_d=0.0008, lambda_q=0.0006, **kwargs):
         super().__init__()
         if os.path.exists(os.path.join(model_type_or_dir, "0_MLMTransformer")):
             print("path", model_type_or_dir)
@@ -135,20 +177,6 @@ class Splade(nn.Module):
         self.transformer = AutoModelForMaskedLM.from_pretrained(model_type_or_dir, **kwargs)
         self.tokenizer = AutoTokenizer.from_pretrained(model_type_or_dir)
 
-        weights_path = os.path.join(model_type_or_dir, IDF_FILE_NAME)
-        if load_weight:
-            with open(weights_path) as f:
-                weights = json.load(f)
-
-            vocab_weight = torch.ones(self.transformer.config.vocab_size)
-            for i, w in weights.items():
-                vocab_weight[int(i)] = w
-
-            if weight_sqrt:
-                vocab_weight = torch.sqrt(vocab_weight)
-            self.vocab_weights = nn.Parameter(vocab_weight)
-        else:
-            self.vocab_weights = None
         self.loss_func = nn.CrossEntropyLoss()
         self.lambda_d = lambda_d
         self.lambda_q = lambda_q
@@ -177,8 +205,6 @@ class Splade(nn.Module):
     def encode(self, **kwargs):
         out = self.transformer(**kwargs)["logits"]  # output (logits) of MLM head, shape (bs, pad_len, voc_size)
         vec = torch.max(torch.log(1 + torch.relu(out)) * kwargs["attention_mask"].unsqueeze(-1), dim=1).values
-        if self.vocab_weights is not None:
-            vec *= self.vocab_weights
 
         return vec
 
