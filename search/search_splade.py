@@ -50,7 +50,7 @@ def main(args):
     calc_models = {
         "org": BEIRSpladeModel(model, tokenizer),
         "idf": BEIRSpladeModelIDF(model, tokenizer, idf),
-        "bm25": BEIRSpladeModelIDF(model, tokenizer, idf, doc_len_ave),
+        "bm25": BEIRSpladeModelBM25(model, tokenizer, idf, doc_len_ave),
     }
 
     k_values = [1, 10, 100]
