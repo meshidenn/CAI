@@ -75,13 +75,13 @@ class BEIRSpladeModelIDF:
 
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
-        X = self.model.encode_sentence_bert(self.tokenizer, queries, is_q=True, maxlen=self.max_length)
+        X = self.model.encode_sentence_bert(queries, maxlen=self.max_length)
         return X
 
     # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
     def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
         sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
-        X = self.model.encode_sentence_bert(self.tokenizer, sentences, maxlen=self.max_length)
+        X = self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
         X *= self.idf
         return X
 
@@ -111,13 +111,13 @@ class BEIRSpladeModelBM25:
 
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
-        X = self.model.encode_sentence_bert(self.tokenizer, queries, is_q=True, maxlen=self.max_length)
+        X = self.model.encode_sentence_bert(queries, maxlen=self.max_length)
         return X
 
     # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
     def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
         sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
-        X = self.model.encode_sentence_bert(self.tokenizer, sentences, maxlen=self.max_length)
+        X = self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
         input_tfs = np.ones(X.shape)
         i_sentences = self.tokenizer(sentences, add_special_tokens=False)["input_ids"]
         for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
@@ -138,7 +138,7 @@ class BEIRSpladeModel:
 
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
-        X = self.model.encode_sentence_bert(queries, is_q=True, maxlen=self.max_length)
+        X = self.model.encode_sentence_bert(queries, maxlen=self.max_length)
         return X
 
     # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
@@ -235,7 +235,6 @@ class Splade(nn.Module):
         device: str = None,
         normalize_embeddings: bool = False,
         maxlen: int = 512,
-        is_q: bool = False,
     ) -> Union[List[Tensor], ndarray, Tensor]:
         """
         Computes sentence embeddings
