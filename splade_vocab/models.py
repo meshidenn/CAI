@@ -120,6 +120,7 @@ class BEIRSpladeModelBM25:
         X = self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
         input_tfs = np.ones(X.shape)
         i_sentences = self.tokenizer(sentences, add_special_tokens=False)
+        print(i_sentences)
         for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
             tf = Counter(input_tokens.tolist())
             for k, v in tf.items():
