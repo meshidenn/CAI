@@ -16,7 +16,7 @@ from beir.retrieval.evaluation import EvaluateRetrieval
 
 from sentence_transformers import SentenceTransformer, losses
 from sentence_transformers.models import Transformer, WordWeights, Pooling
-from models import BEIRSbert
+from splade_vocab.models import BEIRSbert, BM25Weight
 
 
 def calc_idf_and_doclen(corpus, tokenizer, sep):
@@ -38,50 +38,53 @@ def calc_idf_and_doclen(corpus, tokenizer, sep):
 
 
 def main(args):
-    if args.outer_weight:
-        word_embedding_model = Transformer(args.model_type_or_dir)
-
-        vocab = word_embedding_model.tokenizer.get_vocab()
-        pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
-        weight_path = os.path.join(args.model_type_or_dir, "weights.json")
-        with open(weight_path) as f:
-            word_weights = json.load(f)
-
-        for k in word_weights:
-            word_weights[k] = np.sqrt(word_weights[k])
-
-        unknown_word_weight = 1.0
-
-        word_weights = WordWeights(vocab=vocab, word_weights=word_weights, unknown_word_weight=unknown_word_weight)
-        model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
-    else:
-        model = SentenceTransformer(args.model_type_or_dir)
-
-    model.eval()
-
     tokenizer = AutoTokenizer.from_pretrained(args.model_type_or_dir)
     data_dir = args.data_dir
 
     # out_path = os.path.join(data_path, "result", args.out_name, "result.json")
     out_path = os.path.join(args.out_dir, "result.json")
+    analysis_out_path = os.path.join(args.out_dir, "analysis.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="test")
-    # idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
-    calc_models = {"org": BEIRSbert(model, tokenizer)}
+    idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
+    vocab = tokenizer.get_vocab()
+    mode = args.mode
+    if mode == "idf":
+        word_embedding_model = Transformer(args.model_type_or_dir)
+        unknown_word_weight = 1.0
+        pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
+        word_weights = WordWeights(vocab=vocab, word_weights=idf, unknown_word_weight=unknown_word_weight)
+        model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
+    elif mode == "bm25":
+        word_embedding_model = Transformer(args.model_type_or_dir)
+        unknown_word_weight = 1.0
+        word_weights = BM25Weight(
+            vocab=vocab, word_weights=idf, unknown_word_weigght=unknown_word_weight, doc_len_ave=doc_len_ave
+        )
+        pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
+        model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
+    else:
+        model = SentenceTransformer(args.model_type_or_dir)
 
+    model.eval()
     out_results = {}
-    for k in calc_models:
-        beir_splade = calc_models[k]
-        dres = DRES(beir_splade)
-        retriever = EvaluateRetrieval(dres, score_function="dot")
-        results = retriever.retrieve(corpus, queries)
-        ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, [1, 10, 100, 1000])
-        results2 = EvaluateRetrieval.evaluate_custom(qrels, results, [1, 10, 100, 1000], metric="r_cap")
-        res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"], "R_cap@100": results2["R_cap@100"]}
-        out_results[k] = res
-        print("{} model result:".format(k), res, flush=True)
+    analysis = {}
+
+    beir_splade = model
+    dres = DRES(beir_splade)
+    retriever = EvaluateRetrieval(dres, score_function="dot")
+    results = retriever.retrieve(corpus, queries)
+    ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, [1, 10, 100, 1000])
+    results2 = EvaluateRetrieval.evaluate_custom(qrels, results, [1, 10, 100, 1000], metric="r_cap")
+    res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"], "R_cap@100": results2["R_cap@100"]}
+    out_results[mode] = res
+    analysis[mode] = results
+    print("{} model result:".format(mode), res, flush=True)
 
     with open(out_path, "w") as f:
         json.dump(out_results, f)
+
+    with open(analysis_out_path, "w") as f:
+        json.dump(analysis, f)
 
 
 if __name__ == "__main__":
