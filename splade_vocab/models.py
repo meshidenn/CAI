@@ -120,13 +120,13 @@ class BEIRSpladeModelBM25:
         X = self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
         input_tfs = np.ones(X.shape)
         i_sentences = self.tokenizer(sentences, add_special_tokens=False)
+        doc_lens = []
         for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
             tf = Counter(input_tokens)
+            doc_lens.append(np.sum(att_mask))
             for k, v in tf.items():
                 input_tfs[i, k] *= v
-        print(i_sentences["attention_mask"][:3])
-        print(np.array(i_sentences["attention_mask"]).shape)
-        doc_lens = np.sum(np.array(i_sentences["attention_mask"]), axis=1).unsqueeze(-1)
+        doc_lens = np.ravel(doc_lens)
         tf_weight = self.bm25_tf(input_tfs, doc_lens)
         X *= tf_weight * self.idf
         return X
