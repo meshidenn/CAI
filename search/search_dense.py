@@ -58,7 +58,7 @@ def main(args):
         word_embedding_model = Transformer(args.model_type_or_dir)
         unknown_word_weight = 1.0
         word_weights = BM25Weight(
-            vocab=vocab, word_weights=idf, unknown_word_weigght=unknown_word_weight, doc_len_ave=doc_len_ave
+            vocab=vocab, word_weights=idf, unknown_word_weight=unknown_word_weight, doc_len_ave=doc_len_ave
         )
         pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
         model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
