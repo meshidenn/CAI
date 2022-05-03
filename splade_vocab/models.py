@@ -124,7 +124,7 @@ class BEIRSpladeModelBM25:
             tf = Counter(input_tokens)
             for k, v in tf.items():
                 input_tfs[i, k] *= v
-        doc_lens = np.sum(i_sentences["attention_mask"], axis=1).unsqueeze(-1)
+        doc_lens = np.sum(np.array(i_sentences["attention_mask"]), axis=1).unsqueeze(-1)
         tf_weight = self.bm25_tf(input_tfs, doc_lens)
         X *= tf_weight * self.idf
         return X
