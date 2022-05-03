@@ -69,7 +69,7 @@ def main(args):
     out_results = {}
     analysis = {}
 
-    beir_splade = model
+    beir_splade = BEIRSbert(model, tokenizer)
     dres = DRES(beir_splade)
     retriever = EvaluateRetrieval(dres, score_function="dot")
     results = retriever.retrieve(corpus, queries)
