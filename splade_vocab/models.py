@@ -150,12 +150,7 @@ class BEIRSpladeModel:
         return self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
 
 
-class BEIRSpladeTKModel:
-    def __init__(self, model, tokenizer, max_length=256):
-        self.max_length = max_length
-        self.tokenizer = tokenizer
-        self.model = model
-
+class BEIRSpladeTKModel(BEIRSpladeModel):
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
@@ -164,10 +159,25 @@ class BEIRSpladeTKModel:
             X[i, i_query] += 1
         return X
 
-    # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
-    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
-        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
-        return self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
+
+class BEIRSpladeTKModelIDF(BEIRSpladeModelIDF):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
+        X = torch.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_queries):
+            X[i, i_query] += 1
+        return X
+
+
+class BEIRSpladeTKModelBM25(BEIRSpladeModelBM25):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
+        X = torch.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_queries):
+            X[i, i_query] += 1
+        return X
 
 
 class Splade(nn.Module):

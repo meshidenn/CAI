@@ -14,7 +14,7 @@ from beir import util, LoggingHandler
 from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval.evaluation import EvaluateRetrieval
 
-from splade_vocab.models import Splade, BEIRSpladeModel, BEIRSpladeTKModel
+from splade_vocab.models import Splade, BEIRSpladeTKModel, BEIRSpladeTKModelIDF, BEIRSpladeTKModelBM25
 
 
 def calc_idf_and_doclen(corpus, tokenizer, sep):
@@ -37,40 +37,43 @@ def calc_idf_and_doclen(corpus, tokenizer, sep):
 
 def main(args):
     # print(args.load_weight, args.weight_sqrt)
-    model = Splade(args.model_type_or_dir, load_weight=args.load_weight, weight_sqrt=args.weight_sqrt)
+    model = Splade(args.model_type_or_dir)
     model.eval()
 
     tokenizer = model.tokenizer
     data_dir = args.data_dir
 
     out_path = os.path.join(args.out_dir, "result.json")
+    analysis_out_path = os.path.join(args.out_dir, "analysis.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="test")
-    # idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
-    # calc_models = {
-    #     "org": BEIRSpladeModel(model, tokenizer),
-    #     "idf": BEIRSpladeModelIDF(model, tokenizer, idf, sqrt=False),
-    #     "idf_sqrt": BEIRSpladeModelIDF(model, tokenizer, idf),
-    # }
+    idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     calc_models = {
         "org": BEIRSpladeTKModel(model, tokenizer),
+        "idf": BEIRSpladeTKModelIDF(model, tokenizer, idf),
+        "bm25": BEIRSpladeTKModelBM25(model, tokenizer, idf, doc_len_ave),
     }
 
     k_values = [1, 10, 100]
 
     out_results = {}
-    for k in calc_models:
-        beir_splade = calc_models[k]
-        dres = DRES(beir_splade, batch_size=args.batch_size, corpus_chunk_size=args.corpus_chunk_size)
-        retriever = EvaluateRetrieval(dres, score_function="dot", k_values=k_values)
-        results = retriever.retrieve(corpus, queries)
-        ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, k_values)
-        results2 = EvaluateRetrieval.evaluate_custom(qrels, results, k_values, metric="r_cap")
-        res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"], "R_cap@100": results2["R_cap@100"]}
-        out_results[k] = res
-        print("{} model result:".format(k), res, flush=True)
+    analysis = {}
+    mode = args.mode
+    beir_splade = calc_models[mode]
+    dres = DRES(beir_splade, batch_size=args.batch_size, corpus_chunk_size=args.corpus_chunk_size)
+    retriever = EvaluateRetrieval(dres, score_function="dot", k_values=k_values)
+    results = retriever.retrieve(corpus, queries)
+    ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, k_values)
+    results2 = EvaluateRetrieval.evaluate_custom(qrels, results, k_values, metric="r_cap")
+    res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"], "R_cap@100": results2["R_cap@100"]}
+    out_results[mode] = res
+    analysis[mode] = results
+    print("{} model result:".format(mode), res, flush=True)
 
     with open(out_path, "w") as f:
         json.dump(out_results, f)
+
+    with open(analysis_out_path, "w") as f:
+        json.dump(analysis, f)
 
 
 if __name__ == "__main__":
