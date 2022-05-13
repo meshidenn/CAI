@@ -82,8 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_type_or_dir")
     parser.add_argument("--data_dir")
     parser.add_argument("--out_dir")
-    parser.add_argument("--load_weight", type=strtobool)
-    parser.add_argument("--weight_sqrt", type=strtobool)
+    parser.add_argument("--mode", default="org", help="org, idf, bm25")
     parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--corpus_chunk_size", default=50000, type=int)
 
