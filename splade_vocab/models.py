@@ -160,7 +160,7 @@ class BEIRSpladeDocModel(BEIRSpladeModel):
         return X
 
 
-class BEIRSpladeDodModelIDF(BEIRSpladeModelIDF):
+class BEIRSpladeDocModelIDF(BEIRSpladeModelIDF):
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
