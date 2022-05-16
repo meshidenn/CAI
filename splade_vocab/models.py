@@ -64,7 +64,7 @@ class BEIRSpladeModelIDF:
         print(self.idf.shape)
 
     def _init_idf(self, idf, sqrt):
-        idf_vec = np.ones(len(self.tokenizer.vocab))
+        idf_vec = torch.ones(len(self.tokenizer.vocab), dtype=torch.float32)
         for k, v in idf.items():
             if v == 0.0:
                 continue
@@ -98,7 +98,7 @@ class BEIRSpladeModelBM25:
         self.doc_len_ave = doc_len_ave
 
     def _init_idf(self, idf):
-        idf_vec = np.ones(len(self.tokenizer.vocab))
+        idf_vec = torch.ones(len(self.tokenizer.vocab), dtype=torch.float32)
         for k, v in idf.items():
             if v == 0.0:
                 continue
@@ -278,10 +278,10 @@ class BEIRSpladeEMModelBM25(BEIRSpladeModelBM25):
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
         X = self.model.encode_sentence_bert(queries, maxlen=self.max_length)
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
-        mask = torch.zeros(len(queries), len(self.tokenizer.get_vocab()))
-        for i, i_sentence in enumerate(i_queries):
-            i_sentence = list(set(i_sentence))
-            mask[i, i_sentence] += 1
+        mask = np.zeros(len(queries), len(self.tokenizer.get_vocab()), dtype=torch.float32)
+        for i, i_query in enumerate(i_queries):
+            i_query = list(set(i_query))
+            mask[i, i_query] += 1
         X *= mask
         return X
 
@@ -289,7 +289,7 @@ class BEIRSpladeEMModelBM25(BEIRSpladeModelBM25):
     def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
         sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
         X = self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
-        input_tfs = torch.zeros(X.shape)
+        input_tfs = np.zeros(X.shape)
         i_sentences = self.tokenizer(sentences, add_special_tokens=False)
         doc_lens = []
         for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
