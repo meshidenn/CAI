@@ -14,7 +14,24 @@ from beir import util, LoggingHandler
 from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval.evaluation import EvaluateRetrieval
 
-from splade_vocab.models import Splade, BEIRSpladeTKModel, BEIRSpladeTKModelIDF, BEIRSpladeTKModelBM25
+from splade_vocab.models import (
+    Splade,
+    BEIRSpladeDocModel,
+    BEIRSpladeDocModelIDF,
+    BEIRSpladeDocModelBM25,
+    BEIRSpladeQueryModel,
+    BEIRSpladeQueryModelIDF,
+    BEIRSpladeQueryModelBM25,
+    BEIRSpladeEMModel,
+    BEIRSpladeEMModelIDF,
+    BEIRSpladeEMModelBM25,
+    BEIRSpladeEMDocModel,
+    BEIRSpladeEMDocModelIDF,
+    BEIRSpladeEMDocModelBM25,
+    BEIRSpladeEMQueryModel,
+    BEIRSpladeEMQueryModelIDF,
+    BEIRSpladeEMQueryModelBM25,
+)
 
 
 def calc_idf_and_doclen(corpus, tokenizer, sep):
@@ -48,9 +65,21 @@ def main(args):
     corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="test")
     idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     calc_models = {
-        "org": BEIRSpladeTKModel(model, tokenizer),
-        "idf": BEIRSpladeTKModelIDF(model, tokenizer, idf),
-        "bm25": BEIRSpladeTKModelBM25(model, tokenizer, idf, doc_len_ave),
+        "d-org": BEIRSpladeDocModel(model, tokenizer),
+        "d-idf": BEIRSpladeDocModelIDF(model, tokenizer, idf),
+        "d-bm25": BEIRSpladeDocModelBM25(model, tokenizer, idf, doc_len_ave),
+        "q-org": BEIRSpladeQueryModel(model, tokenizer),
+        "q-idf": BEIRSpladeQueryModelIDF(model, tokenizer, idf),
+        "q-bm25": BEIRSpladeQueryModelBM25(model, tokenizer, idf, doc_len_ave),
+        "em-org": BEIRSpladeEMModel(model, tokenizer),
+        "em-idf": BEIRSpladeEMModelIDF(model, tokenizer, idf),
+        "em-bm25": BEIRSpladeEMModelBM25(model, tokenizer, idf, doc_len_ave),
+        "em-d-org": BEIRSpladeEMDocModel(model, tokenizer),
+        "em-d-idf": BEIRSpladeEMDocModelIDF(model, tokenizer, idf),
+        "em-d-bm25": BEIRSpladeEMDocModelBM25(model, tokenizer, idf, doc_len_ave),
+        "em-q-org": BEIRSpladeEMQueryModel(model, tokenizer),
+        "em-q-idf": BEIRSpladeEMQueryModelIDF(model, tokenizer, idf),
+        "em-q-bm25": BEIRSpladeEMQueryModelBM25(model, tokenizer, idf, doc_len_ave),
     }
 
     k_values = [1, 10, 100]

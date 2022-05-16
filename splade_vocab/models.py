@@ -150,7 +150,156 @@ class BEIRSpladeModel:
         return self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
 
 
-class BEIRSpladeTKModel(BEIRSpladeModel):
+class BEIRSpladeDocModel(BEIRSpladeModel):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
+        X = np.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_queries):
+            X[i, i_query] += 1
+        return X
+
+
+class BEIRSpladeDodModelIDF(BEIRSpladeModelIDF):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
+        X = np.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_queries):
+            X[i, i_query] += 1
+        return X
+
+
+class BEIRSpladeDocModelBM25(BEIRSpladeModelBM25):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
+        X = np.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_queries):
+            X[i, i_query] += 1
+        return X
+
+
+class BEIRSpladeQueryModel(BEIRSpladeModel):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        i_sentences = self.tokenizer(sentences, add_special_tokens=False)["input_ids"]
+        X = np.zeros(len(sentences), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_sentences):
+            X[i, i_query] += 1
+        return X
+
+
+class BEIRSpladeQueryModelIDF(BEIRSpladeModelIDF):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        i_sentences = self.tokenizer(sentences, add_special_tokens=False)["input_ids"]
+        X = np.zeros(len(sentences), len(self.tokenizer.get_vocab()))
+        for i, i_sentence in enumerate(i_sentences):
+            X[i, i_sentence] += self.idf[i_sentence]
+        return X
+
+
+class BEIRSpladeQueryModelBM25(BEIRSpladeModelBM25):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        input_tfs = np.zeros(len(sentences), len(self.tokenizer.get_vocab()))
+        i_sentences = self.tokenizer(sentences, add_special_tokens=False)
+        doc_lens = []
+        for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
+            tf = Counter(input_tokens)
+            doc_lens.append(np.sum(att_mask))
+            for k, v in tf.items():
+                input_tfs[i, k] *= v
+        doc_lens = np.ravel(doc_lens)[:, np.newaxis]
+        tf_weight = self.bm25_tf(input_tfs, doc_lens)
+        tf_weight *= self.idf
+        return tf_weight
+
+
+class BEIRSpladeEMModel(BEIRSpladeModel):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        X = self.model.encode_sentence_bert(queries, maxlen=self.max_length)
+        i_queries = set(self.tokenizer(queries, add_special_tokens=False)["input_ids"])
+        mask = np.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_queries):
+            mask[i, i_query] += 1
+        X *= mask
+        return X
+
+    # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        i_sentences = set(self.tokenizer(sentences, add_special_tokens=False)["input_ids"])
+        X = self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
+        mask = np.zeros(len(sentences, len(self.tokenizer.get_vocab())))
+        for i, i_query in enumerate(i_sentences):
+            mask[i, i_query] += 1
+        X *= mask
+        return X
+
+
+class BEIRSpladeEMModelIDF(BEIRSpladeModelIDF):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        X = self.model.encode_sentence_bert(queries, maxlen=self.max_length)
+        i_queries = set(self.tokenizer(queries, add_special_tokens=False)["input_ids"])
+        mask = np.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_queries):
+            mask[i, i_query] += 1
+        X *= mask
+        return X
+
+    # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        i_sentences = set(self.tokenizer(sentences, add_special_tokens=False)["input_ids"])
+        X = self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
+        mask = np.zeros(len(sentences), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_sentences):
+            mask[i, i_query] += self.idf[i_query]
+        X *= mask
+        return X
+
+
+class BEIRSpladeEMModelBM25(BEIRSpladeModelBM25):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
+        X = self.model.encode_sentence_bert(queries, maxlen=self.max_length)
+        i_queries = set(self.tokenizer(queries, add_special_tokens=False)["input_ids"])
+        mask = np.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_queries):
+            mask[i, i_query] += 1
+        X *= mask
+        return X
+
+    # Write your own encoding corpus function (Returns: Document embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        X = self.model.encode_sentence_bert(sentences, maxlen=self.max_length)
+        input_tfs = np.zeros(X.shape)
+        i_sentences = self.tokenizer(sentences, add_special_tokens=False)
+        doc_lens = []
+        for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
+            tf = Counter(input_tokens)
+            doc_lens.append(np.sum(att_mask))
+            for k, v in tf.items():
+                input_tfs[i, k] *= v
+
+        doc_lens = np.ravel(doc_lens)[:, np.newaxis]
+        tf_weight = self.bm25_tf(input_tfs, doc_lens)
+        X *= tf_weight * self.idf
+        return X
+
+
+class BEIRSpladeEMDocModel(BEIRSpladeEMModel):
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
@@ -160,7 +309,7 @@ class BEIRSpladeTKModel(BEIRSpladeModel):
         return X
 
 
-class BEIRSpladeTKModelIDF(BEIRSpladeModelIDF):
+class BEIRSpladeEMDocModelIDF(BEIRSpladeEMModelIDF):
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
@@ -170,14 +319,54 @@ class BEIRSpladeTKModelIDF(BEIRSpladeModelIDF):
         return X
 
 
-class BEIRSpladeTKModelBM25(BEIRSpladeModelBM25):
+class BEIRSpladeEMDocModelBM25(BEIRSpladeEMModelBM25):
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
-        X = torch.zeros(len(queries), len(self.tokenizer.get_vocab()))
+        X = np.zeros(len(queries), len(self.tokenizer.get_vocab()))
         for i, i_query in enumerate(i_queries):
             X[i, i_query] += 1
         return X
+
+
+class BEIRSpladeEMQueryModel(BEIRSpladeEMModel):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        i_sentences = self.tokenizer(sentences, add_special_tokens=False)["input_ids"]
+        X = np.zeros(len(sentences), len(self.tokenizer.get_vocab()))
+        for i, i_query in enumerate(i_sentences):
+            X[i, i_query] += 1
+        return X
+
+
+class BEIRSpladeEMQueryModelIDF(BEIRSpladeEMModelIDF):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        i_sentences = self.tokenizer(sentences, add_special_tokens=False)["input_ids"]
+        X = np.zeros(len(sentences), len(self.tokenizer.get_vocab()))
+        for i, i_sentence in enumerate(i_sentences):
+            X[i, i_sentence] += self.idf[i_sentence]
+        return X
+
+
+class BEIRSpladeEMQueryModelBM25(BEIRSpladeEMModelBM25):
+    # Write your own encoding query function (Returns: Query embeddings as numpy array)
+    def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs) -> np.ndarray:
+        sentences = [(doc["title"] + " " + doc["text"]).strip() for doc in corpus]
+        input_tfs = np.zeros(len(sentences), len(self.tokenizer.get_vocab()))
+        i_sentences = self.tokenizer(sentences, add_special_tokens=False)
+        doc_lens = []
+        for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
+            tf = Counter(input_tokens)
+            doc_lens.append(np.sum(att_mask))
+            for k, v in tf.items():
+                input_tfs[i, k] *= v
+        doc_lens = np.ravel(doc_lens)[:, np.newaxis]
+        tf_weight = self.bm25_tf(input_tfs, doc_lens)
+        tf_weight *= self.idf
+        return tf_weight
 
 
 class Splade(nn.Module):
