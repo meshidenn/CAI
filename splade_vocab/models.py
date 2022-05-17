@@ -213,7 +213,7 @@ class BEIRSpladeQueryModelBM25(BEIRSpladeModelBM25):
             tf = Counter(input_tokens)
             doc_lens.append(np.sum(att_mask, dtype=np.float32))
             for k, v in tf.items():
-                input_tfs[i, k] *= v
+                input_tfs[i, k] += v
         doc_lens = np.ravel(doc_lens)[:, np.newaxis]
         tf_weight = self.bm25_tf(input_tfs, doc_lens)
         tf_weight *= self.idf
