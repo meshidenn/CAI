@@ -211,7 +211,7 @@ class BEIRSpladeQueryModelBM25(BEIRSpladeModelBM25):
         doc_lens = []
         for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
             tf = Counter(input_tokens)
-            doc_lens.append(np.sum(att_mask))
+            doc_lens.append(np.sum(att_mask, dtype=np.float32))
             for k, v in tf.items():
                 input_tfs[i, k] *= v
         doc_lens = np.ravel(doc_lens)[:, np.newaxis]
@@ -294,7 +294,7 @@ class BEIRSpladeEMModelBM25(BEIRSpladeModelBM25):
         doc_lens = []
         for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
             tf = Counter(input_tokens)
-            doc_lens.append(np.sum(att_mask))
+            doc_lens.append(np.sum(att_mask, dtype=np.float32))
             for k, v in tf.items():
                 input_tfs[i, k] += v
 
@@ -370,7 +370,7 @@ class BEIRSpladeEMQueryModelBM25(BEIRSpladeEMModelBM25):
         doc_lens = []
         for i, (input_tokens, att_mask) in enumerate(zip(i_sentences["input_ids"], i_sentences["attention_mask"])):
             tf = Counter(input_tokens)
-            doc_lens.append(np.sum(att_mask))
+            doc_lens.append(np.sum(att_mask, dtype=np.float32))
             for k, v in tf.items():
                 input_tfs[i, k] += v
         doc_lens = np.ravel(doc_lens)[:, np.newaxis]
