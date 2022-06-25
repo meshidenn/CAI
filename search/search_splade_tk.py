@@ -34,6 +34,43 @@ from splade_vocab.models import (
 )
 
 
+STOPWORDS = [
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "but",
+    "by",
+    "for",
+    "if",
+    "in",
+    "into",
+    "is",
+    "it",
+    "no",
+    "not",
+    "of",
+    "on",
+    "or",
+    "such",
+    "that",
+    "the",
+    "their",
+    "then",
+    "there",
+    "these",
+    "they",
+    "this",
+    "to",
+    "was",
+    "will",
+    "with",
+]
+
+
 def calc_idf_and_doclen(corpus, tokenizer, sep):
     doc_lens = []
     df = Counter()
@@ -60,6 +97,8 @@ def main(args):
     tokenizer = model.tokenizer
     data_dir = args.data_dir
 
+    i_stopwords = set(tokenizer.convert_tokens_to_ids(STOPWORDS))
+
     out_path = os.path.join(args.out_dir, "result.json")
     analysis_out_path = os.path.join(args.out_dir, "analysis.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="test")
@@ -68,6 +107,9 @@ def main(args):
         "d-org": BEIRSpladeDocModel(model, tokenizer),
         "d-idf": BEIRSpladeDocModelIDF(model, tokenizer, idf),
         "d-bm25": BEIRSpladeDocModelBM25(model, tokenizer, idf, doc_len_ave),
+        "d-org-sw": BEIRSpladeDocModel(model, tokenizer, i_stopwords),
+        "d-idf-sw": BEIRSpladeDocModelIDF(model, tokenizer, idf, i_stopwords),
+        "d-bm25-sw": BEIRSpladeDocModelBM25(model, tokenizer, idf, doc_len_ave, i_stopwords),
         "q-org": BEIRSpladeQueryModel(model, tokenizer),
         "q-idf": BEIRSpladeQueryModelIDF(model, tokenizer, idf),
         "q-bm25": BEIRSpladeQueryModelBM25(model, tokenizer, idf, doc_len_ave),

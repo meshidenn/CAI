@@ -56,11 +56,12 @@ class BEIRSbert:
 
 
 class BEIRSpladeModelIDF:
-    def __init__(self, model, tokenizer, idf, max_length=256, sqrt=True):
+    def __init__(self, model, tokenizer, idf, stopwords=set(), max_length=256, sqrt=True):
         self.max_length = max_length
         self.tokenizer = tokenizer
         self.model = model
         self.idf = self._init_idf(idf, sqrt)
+        self.stopwords = stopwords
         print(self.idf.shape)
 
     def _init_idf(self, idf, sqrt):
@@ -88,7 +89,7 @@ class BEIRSpladeModelIDF:
 
 
 class BEIRSpladeModelBM25:
-    def __init__(self, model, tokenizer, idf, doc_len_ave, max_length=256, bm25_k1=0.9, bm25_b=0.4):
+    def __init__(self, model, tokenizer, idf, doc_len_ave, stopwords=set(), max_length=256, bm25_k1=0.9, bm25_b=0.4):
         self.max_length = max_length
         self.tokenizer = tokenizer
         self.model = model
@@ -96,6 +97,7 @@ class BEIRSpladeModelBM25:
         self.bm25_k1 = bm25_k1
         self.bm25_b = bm25_b
         self.doc_len_ave = doc_len_ave
+        self.stopwords = stopwords
 
     def _init_idf(self, idf):
         idf_vec = np.ones(len(self.tokenizer.vocab), dtype=np.float32)
@@ -134,10 +136,11 @@ class BEIRSpladeModelBM25:
 
 
 class BEIRSpladeModel:
-    def __init__(self, model, tokenizer, max_length=256):
+    def __init__(self, model, tokenizer, stopwords=set(), max_length=256):
         self.max_length = max_length
         self.tokenizer = tokenizer
         self.model = model
+        self.stopwords = stopwords
 
     # Write your own encoding query function (Returns: Query embeddings as numpy array)
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs) -> np.ndarray:
@@ -156,6 +159,8 @@ class BEIRSpladeDocModel(BEIRSpladeModel):
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
         X = np.zeros((len(queries), len(self.tokenizer.get_vocab())), dtype=np.float32)
         for i, i_query in enumerate(i_queries):
+            if i_query in self.stopwords:
+                continue
             X[i, i_query] += 1
         return X
 
@@ -166,6 +171,8 @@ class BEIRSpladeDocModelIDF(BEIRSpladeModelIDF):
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
         X = np.zeros((len(queries), len(self.tokenizer.get_vocab())), dtype=np.float32)
         for i, i_query in enumerate(i_queries):
+            if i_query in self.stopwords:
+                continue
             X[i, i_query] += 1
         return X
 
@@ -176,6 +183,8 @@ class BEIRSpladeDocModelBM25(BEIRSpladeModelBM25):
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
         X = np.zeros((len(queries), len(self.tokenizer.get_vocab())), dtype=np.float32)
         for i, i_query in enumerate(i_queries):
+            if i_query in self.stopwords:
+                continue
             X[i, i_query] += 1
         return X
 
