@@ -97,7 +97,8 @@ def main(args):
     tokenizer = model.tokenizer
     data_dir = args.data_dir
 
-    i_stopwords = set(tokenizer.convert_tokens_to_ids(STOPWORDS))
+    i_stopwords = tokenizer.convert_tokens_to_ids(STOPWORDS)
+    print(i_stopwords)
 
     out_path = os.path.join(args.out_dir, "result.json")
     analysis_out_path = os.path.join(args.out_dir, "analysis.json")
