@@ -136,7 +136,7 @@ class BEIRSpladeModelBM25:
 
 
 class BEIRSpladeModel:
-    def __init__(self, model, tokenizer, stopwords=set(), max_length=256):
+    def __init__(self, model, tokenizer, stopwords=None, max_length=256):
         self.max_length = max_length
         self.tokenizer = tokenizer
         self.model = model
@@ -159,9 +159,9 @@ class BEIRSpladeDocModel(BEIRSpladeModel):
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
         X = np.zeros((len(queries), len(self.tokenizer.get_vocab())), dtype=np.float32)
         for i, i_query in enumerate(i_queries):
-            if i_query in self.stopwords:
-                continue
             X[i, i_query] += 1
+            if self.stopwords is not None:
+                X[i, self.stopwords] = 0
         return X
 
 
@@ -171,9 +171,9 @@ class BEIRSpladeDocModelIDF(BEIRSpladeModelIDF):
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
         X = np.zeros((len(queries), len(self.tokenizer.get_vocab())), dtype=np.float32)
         for i, i_query in enumerate(i_queries):
-            if i_query in self.stopwords:
-                continue
             X[i, i_query] += 1
+            if self.stopwords is not None:
+                X[i, self.stopwords] = 0
         return X
 
 
@@ -183,9 +183,9 @@ class BEIRSpladeDocModelBM25(BEIRSpladeModelBM25):
         i_queries = self.tokenizer(queries, add_special_tokens=False)["input_ids"]
         X = np.zeros((len(queries), len(self.tokenizer.get_vocab())), dtype=np.float32)
         for i, i_query in enumerate(i_queries):
-            if i_query in self.stopwords:
-                continue
             X[i, i_query] += 1
+            if self.stopwords is not None:
+                X[i, self.stopwords] = 0
         return X
 
 
