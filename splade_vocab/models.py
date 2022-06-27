@@ -56,7 +56,7 @@ class BEIRSbert:
 
 
 class BEIRSpladeModelIDF:
-    def __init__(self, model, tokenizer, idf, stopwords=set(), max_length=256, sqrt=True):
+    def __init__(self, model, tokenizer, idf, stopwords=None, max_length=256, sqrt=True):
         self.max_length = max_length
         self.tokenizer = tokenizer
         self.model = model
@@ -89,7 +89,7 @@ class BEIRSpladeModelIDF:
 
 
 class BEIRSpladeModelBM25:
-    def __init__(self, model, tokenizer, idf, doc_len_ave, stopwords=set(), max_length=256, bm25_k1=0.9, bm25_b=0.4):
+    def __init__(self, model, tokenizer, idf, doc_len_ave, stopwords=None, max_length=256, bm25_k1=0.9, bm25_b=0.4):
         self.max_length = max_length
         self.tokenizer = tokenizer
         self.model = model
