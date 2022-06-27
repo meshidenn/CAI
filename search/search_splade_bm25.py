@@ -69,11 +69,6 @@ def main(args):
 
     out_results = {}
     analysis = {}
-    mode = args.mode
-    beir_splade = calc_models[mode]
-    dres = DRES(beir_splade, batch_size=args.batch_size, corpus_chunk_size=args.corpus_chunk_size)
-    retriever = EvaluateRetrieval(dres, score_function="dot", k_values=k_values)
-    splade_results = retriever.retrieve(corpus, queries)
 
     k1 = 0.9
     b = 0.4
@@ -89,6 +84,13 @@ def main(args):
         for did, rank, score, _ in hits_iterator(hits):
             results[qid][did] = score
 
+    mode = args.mode
+    beir_splade = calc_models[mode]
+    dres = DRES(beir_splade, batch_size=args.batch_size, corpus_chunk_size=args.corpus_chunk_size)
+    retriever = EvaluateRetrieval(dres, score_function="dot", k_values=k_values)
+    splade_results = retriever.retrieve(corpus, queries)
+
+    for qid in splade_results:
         for did, score in splade_results[qid].items():
             results[qid][did] += score
 

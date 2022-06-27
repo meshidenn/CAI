@@ -81,11 +81,6 @@ def main(args):
     out_results = {}
     analysis = {}
 
-    beir_splade = BEIRSbert(model, tokenizer)
-    dres = DRES(beir_splade)
-    retriever = EvaluateRetrieval(dres, score_function="dot")
-    dense_results = retriever.retrieve(corpus, queries)
-
     k1 = 0.9
     b = 0.4
     top_k = 100
@@ -100,6 +95,12 @@ def main(args):
         for did, rank, score, _ in hits_iterator(hits):
             results[qid][did] = score
 
+    beir_splade = BEIRSbert(model, tokenizer)
+    dres = DRES(beir_splade)
+    retriever = EvaluateRetrieval(dres, score_function="dot")
+    dense_results = retriever.retrieve(corpus, queries)
+
+    for qid in dense_results:
         for did, score in dense_results[qid].items():
             results[qid][did] += score
 
