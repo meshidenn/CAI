@@ -92,7 +92,10 @@ def main(args):
 
     for qid in splade_results:
         for did, score in splade_results[qid].items():
-            results[qid][did] += score
+            if args.mul:
+                results[qid][did] *= score
+            else:
+                results[qid][did] += score
 
     ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, k_values)
     res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"]}
@@ -116,6 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--mode", default="org", help="org, idf, bm25")
     parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--index")
+    parser.add_argument("--mul", action="store_true")
     parser.add_argument("--corpus_chunk_size", default=50000, type=int)
 
     args = parser.parse_args()
