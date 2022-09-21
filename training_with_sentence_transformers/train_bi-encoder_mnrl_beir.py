@@ -20,6 +20,7 @@ import sys
 import json
 from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer, LoggingHandler, util, models, evaluation, losses, InputExample
+from beir.datasets.data_loader import GenericDataLoader
 import logging
 from datetime import datetime
 import gzip

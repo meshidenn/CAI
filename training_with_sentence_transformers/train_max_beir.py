@@ -5,6 +5,7 @@ import sys
 import json
 from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer, LoggingHandler, util, evaluation, InputExample
+from beir.datasets.data_loader import GenericDataLoader
 import models
 import logging
 from datetime import datetime
@@ -62,7 +63,7 @@ logging.info("Create new SBERT model")
 word_embedding_model = models.MLMTransformer(args.model_name, max_seq_length=max_seq_length)
 model = SentenceTransformer(modules=[word_embedding_model])
 
-model_save_path = f'output/Splade_max_{args.lambda_q}_{args.lambda_d}_cemargin{ce_score_margin}_{args.model_name.replace("/", "-")}-batch_size_{train_batch_size}-{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+model_save_path = f'output/Splade_max_{args.lambda_q}_{args.lambda_d}_{args.model_name.replace("/", "-")}-batch_size_{train_batch_size}-{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
 
 # Write self to path
 os.makedirs(model_save_path, exist_ok=True)
@@ -74,6 +75,8 @@ with open(train_script_path, "a") as fOut:
 
 ### Now we read the MS MARCO dataset
 data_folder = args.data_folder
+corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="train")
+
 
 #### Read the corpus file containing all the passages. Store them in the corpus dict
 corpus = {}  # dict in the format: passage_id -> passage. Stores all existing passages
