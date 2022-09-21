@@ -74,15 +74,15 @@ with open(train_script_path, "a") as fOut:
     fOut.write("\n\n# Script was called via:\n#python " + " ".join(sys.argv))
 
 ### Now we read the MS MARCO dataset
-data_folder = args.data_folder
+data_dir = args.data_folder
 corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="train")
 
 
 #### Read the corpus file containing all the passages. Store them in the corpus dict
 corpus = {}  # dict in the format: passage_id -> passage. Stores all existing passages
-collection_filepath = os.path.join(data_folder, "collection.tsv")
+collection_filepath = os.path.join(data_dir, "collection.tsv")
 if not os.path.exists(collection_filepath):
-    tar_filepath = os.path.join(data_folder, "collection.tar.gz")
+    tar_filepath = os.path.join(data_dir, "collection.tar.gz")
     if not os.path.exists(tar_filepath):
         logging.info("Download collection.tar.gz")
         util.http_get("https://msmarco.blob.core.windows.net/msmarcoranking/collection.tar.gz", tar_filepath)

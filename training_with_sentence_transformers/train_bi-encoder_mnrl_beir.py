@@ -95,14 +95,12 @@ model_save_path = "{}/train_bi-encoder-mnrl-{}-{}".format(
 
 
 ### Now we read the MS Marco dataset
-data_folder = args.data_folder
-
-ata_folder = args.data_folder
+data_dir = args.data_folder
 corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="train")
 
 
 # As training data we use hard-negatives that have been mined using various systems
-hard_negatives_filepath = os.path.join(data_folder, "hard_negatives.json")
+hard_negatives_filepath = os.path.join(data_dir, "hard_negatives.json")
 
 logging.info("Read hard negatives train file")
 train_queries = {}
