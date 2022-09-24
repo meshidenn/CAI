@@ -42,7 +42,7 @@ def main(args):
     data_dir = args.data_dir
 
     # out_path = os.path.join(data_path, "result", args.out_name, "result.json")
-    corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="test")
+    corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="train")
     idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
     vocab = tokenizer.get_vocab()
     mode = args.mode
@@ -98,7 +98,7 @@ def main(args):
                 if ns in present_hard_negatives[i]["neg"]:
                     this_hard_negatives["neg"][ns] = hard_negatives[i]["neg"][ns]
 
-        for did, score in hits.items():
+        for did, score in sorted(hits.items(), keys=lambda x: -x[1])[: args.top_k]:
             if did not in qrels[qid]:
                 this_hard_negatives["neg"][sysname].append(did)
         hard_negatives.append(this_hard_negatives)
@@ -119,6 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--result_dir")
     parser.add_argument("--present_neg_path")
     parser.add_argument("--sysname", default="dense-sup-bm25-neg")
+    parser.add_argument("--top_k", deafult=100, type=int)
     parser.add_argument("--mode", default="org", help="org.idf,bm25")
 
     args = parser.parse_args()
