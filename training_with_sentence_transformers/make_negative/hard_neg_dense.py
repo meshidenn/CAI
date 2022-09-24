@@ -97,7 +97,7 @@ def main(args):
                 if ns in hard_negatives[i]["neg"]:
                     this_hard_negatives["neg"][ns] = hard_negatives[i]["neg"][ns]
 
-        for did, rank, score, _ in hits:
+        for did, score in hits.items():
             if did not in qrels[qid]:
                 this_hard_negatives["neg"][sysname].append(did)
         hard_negatives.append(this_hard_negatives)
