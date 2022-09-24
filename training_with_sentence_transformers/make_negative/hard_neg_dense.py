@@ -77,11 +77,11 @@ def main(args):
     sysname = args.sysname
     if args.present_neg_path:
         with open(args.present_neg_path) as f:
-            for i, line in enumerate(f):
+            for idx_, line in enumerate(f):
                 jline = json.loads(line)
                 present_hard_negatives.append(jline)
                 qid = jline["qid"]
-                index_hard_negatives[qid] = i
+                index_hard_negatives[qid] = idx_
                 neg_sys = set(list(jline["neg"].keys()))
                 neg_systems |= neg_sys
 
@@ -93,10 +93,10 @@ def main(args):
             "neg": {sysname: []},
         }
         if qid in index_hard_negatives:
-            i = index_hard_negatives[qid]
+            idx_ = index_hard_negatives[qid]
             for ns in neg_systems:
-                if ns in present_hard_negatives[i]["neg"]:
-                    this_hard_negatives["neg"][ns] = hard_negatives[i]["neg"][ns]
+                if ns in present_hard_negatives[idx_]["neg"]:
+                    hard_negatives["neg"][ns] = present_hard_negatives[idx_]["neg"][ns]
 
         for did, score in sorted(hits.items(), keys=lambda x: -x[1])[: args.top_k]:
             if did not in qrels[qid]:
