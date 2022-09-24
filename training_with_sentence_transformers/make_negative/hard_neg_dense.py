@@ -81,7 +81,7 @@ def main(args):
                 hard_negatives.append(jline)
                 qid = jline["qid"]
                 index_hard_negatives[qid] = i
-                neg_sys = set(list(line["neg"].keys()))
+                neg_sys = set(list(jline["neg"].keys()))
                 neg_systems |= neg_sys
 
     for qid, query in tqdm(queries.items()):
