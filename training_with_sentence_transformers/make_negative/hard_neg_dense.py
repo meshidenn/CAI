@@ -70,6 +70,7 @@ def main(args):
     retriever = EvaluateRetrieval(dres, score_function="dot")
     results = retriever.retrieve(corpus, queries)
 
+    present_hard_negatives = []
     hard_negatives = []
     index_hard_negatives = {}
     neg_systems = set()
@@ -78,7 +79,7 @@ def main(args):
         with open(args.present_neg_path) as f:
             for i, line in enumerate(f):
                 jline = json.loads(line)
-                hard_negatives.append(jline)
+                present_hard_negatives.append(jline)
                 qid = jline["qid"]
                 index_hard_negatives[qid] = i
                 neg_sys = set(list(jline["neg"].keys()))
