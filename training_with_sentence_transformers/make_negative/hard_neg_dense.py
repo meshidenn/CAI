@@ -107,6 +107,8 @@ def main(args):
         for hn in hard_negatives:
             print(json.dumps(hn), file=f)
 
+    print("finish writing")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
