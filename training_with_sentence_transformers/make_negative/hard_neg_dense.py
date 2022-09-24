@@ -114,7 +114,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_type_or_dir")
     parser.add_argument("--data_dir")
     parser.add_argument("--result_dir")
-    parser.add_argument("--pretent_neg_path")
+    parser.add_argument("--present_neg_path")
     parser.add_argument("--sysname", default="dense-sup-bm25-neg")
     parser.add_argument("--mode", default="org", help="org.idf,bm25")
 
