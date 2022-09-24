@@ -77,9 +77,9 @@ def main(args):
     if args.present_neg_path:
         with open(args.present_neg_path) as f:
             for i, line in enumerate(f):
-                json.loads(line)
-                hard_negatives.append(line)
-                qid = line["qid"]
+                jline = json.loads(line)
+                hard_negatives.append(jline)
+                qid = jline["qid"]
                 index_hard_negatives[qid] = i
                 neg_sys = set(list(line["neg"].keys()))
                 neg_systems |= neg_sys
