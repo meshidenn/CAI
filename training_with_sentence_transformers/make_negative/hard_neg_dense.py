@@ -95,7 +95,7 @@ def main(args):
         if qid in index_hard_negatives:
             i = index_hard_negatives[qid]
             for ns in neg_systems:
-                if ns in hard_negatives[i]["neg"]:
+                if ns in present_hard_negatives[i]["neg"]:
                     this_hard_negatives["neg"][ns] = hard_negatives[i]["neg"][ns]
 
         for did, score in hits.items():
