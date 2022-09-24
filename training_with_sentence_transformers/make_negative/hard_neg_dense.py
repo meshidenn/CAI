@@ -119,7 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--result_dir")
     parser.add_argument("--present_neg_path")
     parser.add_argument("--sysname", default="dense-sup-bm25-neg")
-    parser.add_argument("--top_k", deafult=100, type=int)
+    parser.add_argument("--top_k", default=100, type=int)
     parser.add_argument("--mode", default="org", help="org.idf,bm25")
 
     args = parser.parse_args()
