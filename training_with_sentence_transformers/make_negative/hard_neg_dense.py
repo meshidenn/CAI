@@ -96,7 +96,7 @@ def main(args):
             idx_ = index_hard_negatives[qid]
             for ns in neg_systems:
                 if ns in present_hard_negatives[idx_]["neg"]:
-                    hard_negatives["neg"][ns] = present_hard_negatives[idx_]["neg"][ns]
+                    this_hard_negatives["neg"][ns] = present_hard_negatives[idx_]["neg"][ns]
 
         for did, score in sorted(hits.items(), keys=lambda x: -x[1])[: args.top_k]:
             if did not in qrels[qid]:
