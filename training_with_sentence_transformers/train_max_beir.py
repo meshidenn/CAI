@@ -64,7 +64,7 @@ logging.info("Create new SBERT model")
 word_embedding_model = models.MLMTransformer(args.model_name, max_seq_length=max_seq_length)
 model = SentenceTransformer(modules=[word_embedding_model])
 
-model_save_path = f'output/Splade_max_{args.lambda_q}_{args.lambda_d}_{args.model_name.replace("/", "-")}-batch_size_{train_batch_size}-{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+model_save_path = f'{args.output_dir}/Splade_max_{args.lambda_q}_{args.lambda_d}_{args.model_name.replace("/", "-")}-batch_size_{train_batch_size}-{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
 
 # Write self to path
 os.makedirs(model_save_path, exist_ok=True)
