@@ -120,7 +120,7 @@ for line in train_triples:
 
         if len(dev_samples[qid]["negative"]) < num_max_dev_negatives:
             n_text = corpus[neg_id]["title"] + " " + corpus[neg_id]["text"]
-            dev_samples[qid]["negative"].add(corpus[neg_id])
+            dev_samples[qid]["negative"].add(n_text)
 
 
 # Read our training file
