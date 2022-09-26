@@ -115,9 +115,11 @@ for line in train_triples:
         dev_samples[qid] = {"query": queries[qid], "positive": set(), "negative": set()}
 
     if qid in dev_samples:
-        dev_samples[qid]["positive"].add(corpus[pos_id])
+        p_text = corpus[pos_id]["title"] + " " + corpus[pos_id]["text"]
+        dev_samples[qid]["positive"].add(p_text)
 
         if len(dev_samples[qid]["negative"]) < num_max_dev_negatives:
+            n_text = corpus[neg_id]["title"] + " " + corpus[neg_id]["text"]
             dev_samples[qid]["negative"].add(corpus[neg_id])
 
 
