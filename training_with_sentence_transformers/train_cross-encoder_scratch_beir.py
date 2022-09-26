@@ -124,11 +124,6 @@ for line in train_triples:
 
 
 # Read our training file
-train_filepath = os.path.join(data_folder, "msmarco-qidpidtriples.rnd-shuf.train.tsv.gz")
-if not os.path.exists(train_filepath):
-    logging.info("Download " + os.path.basename(train_filepath))
-    util.http_get("https://sbert.net/datasets/msmarco-qidpidtriples.rnd-shuf.train.tsv.gz", train_filepath)
-
 cnt = 0
 for line in tqdm.tqdm(train_triples, unit_scale=True):
     qid, pos_id, neg_id = line.strip().split()
