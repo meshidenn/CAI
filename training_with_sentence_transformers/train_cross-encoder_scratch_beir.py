@@ -133,10 +133,10 @@ for line in tqdm.tqdm(train_triples, unit_scale=True):
 
     query = queries[qid]
     if (cnt % (pos_neg_ration + 1)) == 0:
-        passage = corpus[pos_id]
+        passage = corpus[pos_id]["title"] + " " + corpus[pos_id]["text"]
         label = 1
     else:
-        passage = corpus[neg_id]
+        passage = corpus[neg_id]["title"] + " " + corpus[neg_id]["text"]
         label = 0
 
     train_samples.append(InputExample(texts=[query, passage], label=label))
