@@ -96,7 +96,7 @@ with open(hard_negatives_filepath) as f:
                     train_triples.append((qid, pid, nid))
 
 
-train_triples = random.shuffle(train_triples)
+random.shuffle(train_triples)
 ### Now we create our training & dev data
 train_samples = []
 dev_samples = {}
