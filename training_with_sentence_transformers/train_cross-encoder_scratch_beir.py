@@ -126,7 +126,7 @@ for line in train_triples:
 # Read our training file
 cnt = 0
 for line in tqdm.tqdm(train_triples, unit_scale=True):
-    qid, pos_id, neg_id = line.strip().split()
+    qid, pos_id, neg_id = line
 
     if qid in dev_samples:
         continue
