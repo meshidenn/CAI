@@ -35,8 +35,7 @@ def hits_iterator(hits: List[JSimpleSearcherResult]):
 #### /print debug information to stdout
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_name_or_path")
-parser.add_argument("--dataset")
-parser.add_argument("--root_dir")
+parser.add_argument("--data_dir")
 parser.add_argument("--index")
 parser.add_argument("--out_dir")
 parser.add_argument("--batch_size", default=128, type=int)
@@ -51,8 +50,7 @@ top_k = 100
 k_values = [1, 3, 5, 10, 100]
 
 #### Download nfcorpus.zip dataset and unzip the dataset
-dataset = args.dataset
-data_path = os.path.join(args.root_dir, dataset)
+data_path = args.data_dir
 
 #### Provide the data_path where nfcorpus has been downloaded and unzipped
 corpus, queries, qrels = GenericDataLoader(data_path).load(split="test")
@@ -77,11 +75,15 @@ rerank_results = reranker.rerank(corpus, queries, results, top_k=100)
 
 #### Evaluate your retrieval using NDCG@k, MAP@K ...
 ndcg, _map, recall, precision = EvaluateRetrieval.evaluate(qrels, rerank_results, k_values)
+res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"]}
 
-with open(args.eval_resultpath, "w") as f:
-    json.dump(ndcg, f)
+out_path = os.path.join(args.out_dir, "result.json")
+analysis_out_path = os.path.join(args.out_dir, "analysis.json")
 
-with open(args.rerank_resultpath, "w") as f:
+with open(args.out_path, "w") as f:
+    json.dump(res, f)
+
+with open(args.analysis_out_path, "w") as f:
     json.dump(rerank_results, f)
 
 
