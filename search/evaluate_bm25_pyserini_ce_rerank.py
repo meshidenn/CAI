@@ -80,10 +80,10 @@ res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"]}
 out_path = os.path.join(args.out_dir, "result.json")
 analysis_out_path = os.path.join(args.out_dir, "analysis.json")
 
-with open(args.out_path, "w") as f:
+with open(out_path, "w") as f:
     json.dump(res, f)
 
-with open(args.analysis_out_path, "w") as f:
+with open(analysis_out_path, "w") as f:
     json.dump(rerank_results, f)
 
 
