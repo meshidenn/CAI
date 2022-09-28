@@ -57,7 +57,7 @@ def main(args):
 
     beir_splade = calc_models[mode]
     dres = DRES(beir_splade, batch_size=args.batch_size, corpus_chunk_size=args.corpus_chunk_size)
-    retriever = EvaluateRetrieval(dres, score_function="dot", k_values=k_values)
+    retriever = EvaluateRetrieval(dres, score_function="dot")
     results = retriever.retrieve(corpus, queries)
 
     present_hard_negatives = []
