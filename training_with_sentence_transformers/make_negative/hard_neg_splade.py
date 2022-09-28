@@ -43,7 +43,7 @@ def main(args):
 
     tokenizer = model.tokenizer
     data_dir = args.data_dir
-    
+
     # out_path = os.path.join(data_path, "result", args.out_name, "result.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="train")
     idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
@@ -54,7 +54,7 @@ def main(args):
     }
 
     mode = args.mode
-    
+
     beir_splade = calc_models[mode]
     dres = DRES(beir_splade, batch_size=args.batch_size, corpus_chunk_size=args.corpus_chunk_size)
     retriever = EvaluateRetrieval(dres, score_function="dot", k_values=k_values)
@@ -108,9 +108,11 @@ if __name__ == "__main__":
     parser.add_argument("--data_dir")
     parser.add_argument("--result_dir")
     parser.add_argument("--present_neg_path")
-    parser.add_argument("--sysname", default="dense-sup-bm25-neg")
+    parser.add_argument("--sysname", default="splade-sup-bm25-neg")
     parser.add_argument("--top_k", default=100, type=int)
     parser.add_argument("--mode", default="org", help="org.idf,bm25")
+    parser.add_argument("--batch_size", default=128, type=int)
+    parser.add_argument("--corpus_chunk_size", default=50000, type=int)
 
     args = parser.parse_args()
 
