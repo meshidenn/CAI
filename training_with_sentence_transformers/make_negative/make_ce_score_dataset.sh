@@ -41,7 +41,7 @@ fi
 
 
 
-python evaluate_bm25_pyserini_ce_rerank.py \
+python make_ce_score_bm25_pyserini.py \
    --model_name_or_path $model_name_or_path \
    --out_dir $out_dir \
    --data_dir $data_dir \
