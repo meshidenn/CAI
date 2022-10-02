@@ -134,3 +134,4 @@ else:
 
 with open(ce_scores_out_path, "w") as f:
     json.dump(ce_scores, f)
+print("finish saving ce-scores.json")
