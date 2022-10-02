@@ -49,7 +49,8 @@ def calc_idf_and_doclen(corpus, tokenizer, sep):
 
 #### /print debug information to stdout
 parser = argparse.ArgumentParser()
-parser.add_argument("--model_name_or_path")
+parser.add_argument("--ce_model_name_or_path")
+parser.add_argument("--dense_model_name_or_path")
 parser.add_argument("--data_dir")
 parser.add_argument("--out_dir")
 parser.add_argument("--batch_size", default=128, type=int)
@@ -75,13 +76,13 @@ idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
 vocab = tokenizer.get_vocab()
 mode = args.mode
 if mode == "idf":
-    word_embedding_model = Transformer(args.model_type_or_dir)
+    word_embedding_model = Transformer(args.dense_model_name_or_path)
     unknown_word_weight = 1.0
     pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
     word_weights = WordWeights(vocab=vocab, word_weights=idf, unknown_word_weight=unknown_word_weight)
     model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
 elif mode == "bm25":
-    word_embedding_model = Transformer(args.model_type_or_dir)
+    word_embedding_model = Transformer(args.dense_model_name_or_path)
     unknown_word_weight = 1.0
     word_weights = BM25Weight(
         vocab=vocab, word_weights=idf, unknown_word_weight=unknown_word_weight, doc_len_ave=doc_len_ave
@@ -89,7 +90,7 @@ elif mode == "bm25":
     pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
     model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
 else:
-    model = SentenceTransformer(args.model_type_or_dir)
+    model = SentenceTransformer(args.dense_model_name_or_path)
 
 model.eval()
 out_results = {}
@@ -105,7 +106,7 @@ results = retriever.retrieve(corpus, queries)
 
 #### Reranking using Cross-Encoder models #####
 #### https://www.sbert.net/docs/pretrained_cross-encoders.html
-cross_encoder_model = CrossEncoder(args.model_name_or_path, max_length=args.max_length)
+cross_encoder_model = CrossEncoder(args.ce_model_name_or_path, max_length=args.max_length)
 reranker = Rerank(cross_encoder_model, batch_size=args.batch_size)
 
 # Rerank top-100 results using the reranker provided
@@ -121,12 +122,12 @@ present_ce_path = os.path.join(data_path, "ce_scores.json")
 
 if os.path.exists(present_ce_path):
     with open(present_ce_path, "r") as fIn:
-        present_ce_scores = json.load(f)
+        present_ce_scores = json.load(fIn)
     ce_scores = present_ce_scores
 
     for qid, did_scores in rerank_results.items():
         if qid in ce_scores:
-            for did, score in dic_scores.items():
+            for did, score in did_scores.items():
                 ce_scores[qid][did] = score
         else:
             ce_scores[qid] = did_scores
