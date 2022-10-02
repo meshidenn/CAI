@@ -95,6 +95,9 @@ model.eval()
 out_results = {}
 analysis = {}
 
+top_k = 100
+k_values = [1, 3, 5, 10, 100]
+
 beir_splade = BEIRSbert(model, tokenizer)
 dres = DRES(beir_splade)
 retriever = EvaluateRetrieval(dres, score_function="dot")
@@ -106,7 +109,7 @@ cross_encoder_model = CrossEncoder(args.model_name_or_path, max_length=args.max_
 reranker = Rerank(cross_encoder_model, batch_size=args.batch_size)
 
 # Rerank top-100 results using the reranker provided
-rerank_results = reranker.rerank(corpus, queries, results, top_k=100)
+rerank_results = reranker.rerank(corpus, queries, results, top_k=top_k)
 
 #### Evaluate your retrieval using NDCG@k, MAP@K ...
 ndcg, _map, recall, precision = EvaluateRetrieval.evaluate(qrels, rerank_results, k_values)
@@ -119,7 +122,7 @@ present_ce_path = os.path.join(data_path, "ce_scores.json")
 if os.path.exists(present_ce_path):
     with open(present_ce_path, "r") as fIn:
         present_ce_scores = json.load(f)
-    ce_scores = present_ce_scores:
+    ce_scores = present_ce_scores
 
     for qid, did_scores in rerank_results.items():
         if qid in ce_scores:
