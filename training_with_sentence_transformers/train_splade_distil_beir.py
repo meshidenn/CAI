@@ -81,7 +81,7 @@ corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="tra
 
 # As training data we use hard-negatives that have been mined using various systems
 hard_negatives_filepath = os.path.join(data_dir, "hard_negatives.json")
-ce_scores_file = os.path.join(data_dir, "ce_scores.json")
+ce_scores_file = os.path.join(data_dir, "ce-scores.json")
 with open(ce_scores_file) as f:
     ce_scores = json.load(f)
 
