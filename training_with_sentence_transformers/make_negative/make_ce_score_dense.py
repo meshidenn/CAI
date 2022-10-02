@@ -55,6 +55,7 @@ parser.add_argument("--data_dir")
 parser.add_argument("--out_dir")
 parser.add_argument("--batch_size", default=128, type=int)
 parser.add_argument("--max_length", default=512, type=int)
+parser.add_argument("--mode", default="org")
 
 args = parser.parse_args()
 
@@ -103,6 +104,7 @@ beir_splade = BEIRSbert(model, tokenizer)
 dres = DRES(beir_splade)
 retriever = EvaluateRetrieval(dres, score_function="dot")
 results = retriever.retrieve(corpus, queries)
+del model
 
 #### Reranking using Cross-Encoder models #####
 #### https://www.sbert.net/docs/pretrained_cross-encoders.html
