@@ -122,7 +122,7 @@ with open(hard_negatives_filepath, "rt") as fIn:
             system_negs = data["neg"][system_name]
             negs_added = 0
             for pid in system_negs:
-                if pid not in neg_pids:
+                if pid not in neg_pids and pid in ce_scores[qid]:
                     neg_pids.add(pid)
                     negs_added += 1
                     if negs_added >= num_negs_per_system:
