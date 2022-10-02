@@ -88,7 +88,7 @@ with open(ce_scores_file) as f:
 
 logging.info("Read hard negatives train file")
 train_queries = {}
-negs_to_use = args.negs_to_use
+negs_to_use = None
 print(negs_to_use)
 with open(hard_negatives_filepath, "rt") as fIn:
     for line in tqdm.tqdm(fIn):

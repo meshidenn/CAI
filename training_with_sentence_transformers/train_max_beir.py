@@ -84,8 +84,7 @@ hard_negatives_filepath = os.path.join(data_dir, "hard_negatives.json")
 
 logging.info("Read hard negatives train file")
 train_queries = {}
-negs_to_use = args.negs_to_use
-print(negs_to_use)
+negs_to_use = None
 with open(hard_negatives_filepath, "rt") as fIn:
     for line in tqdm.tqdm(fIn):
         data = json.loads(line)
