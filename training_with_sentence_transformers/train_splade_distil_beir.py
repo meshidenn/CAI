@@ -32,8 +32,8 @@ parser.add_argument("--output_dir")
 parser.add_argument("--train_batch_size", default=64, type=int)
 parser.add_argument("--max_seq_length", default=300, type=int)
 parser.add_argument("--model_name", default="distilbert-base-uncased", type=str)
-parser.add_argument("--lambda_d", default=0.0008, type=float)
-parser.add_argument("--lambda_q", default=0.0006, type=float)
+parser.add_argument("--lambda_d", default=0.08, type=float)
+parser.add_argument("--lambda_q", default=0.1, type=float)
 parser.add_argument("--max_passages", default=0, type=int)
 parser.add_argument("--epochs", default=30, type=int)
 parser.add_argument("--pooling", default="mean")
@@ -64,7 +64,7 @@ logging.info("Create new SBERT model")
 word_embedding_model = models.MLMTransformer(args.model_name, max_seq_length=max_seq_length)
 model = SentenceTransformer(modules=[word_embedding_model])
 
-model_save_path = f'{args.output_dir}/Splade_max_{args.lambda_q}_{args.lambda_d}_{args.model_name.replace("/", "-")}-batch_size_{train_batch_size}-{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
+model_save_path = f'{args.output_dir}/distilSplade_{args.lambda_q}_{args.lambda_d}_{model_name.replace("/", "-")}-batch_size_{train_batch_size}-{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}'
 
 # Write self to path
 os.makedirs(model_save_path, exist_ok=True)
