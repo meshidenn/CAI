@@ -113,13 +113,8 @@ reranker = Rerank(cross_encoder_model, batch_size=args.batch_size)
 # Rerank top-100 results using the reranker provided
 rerank_results = reranker.rerank(corpus, queries, results, top_k=top_k)
 
-#### Evaluate your retrieval using NDCG@k, MAP@K ...
-ndcg, _map, recall, precision = EvaluateRetrieval.evaluate(qrels, rerank_results, k_values)
-res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"]}
-
 ce_scores_out_path = os.path.join(args.out_dir, "ce-scores.json")
-
-present_ce_path = os.path.join(data_path, "ce_scores.json")
+present_ce_path = os.path.join(data_path, "ce-scores.json")
 
 if os.path.exists(present_ce_path):
     print("update ce-scores.json")
