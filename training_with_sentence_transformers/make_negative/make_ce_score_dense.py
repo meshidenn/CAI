@@ -122,6 +122,7 @@ ce_scores_out_path = os.path.join(args.out_dir, "ce-scores.json")
 present_ce_path = os.path.join(data_path, "ce_scores.json")
 
 if os.path.exists(present_ce_path):
+    print("update ce-scores.json")
     with open(present_ce_path, "r") as fIn:
         present_ce_scores = json.load(fIn)
     ce_scores = present_ce_scores
