@@ -94,7 +94,14 @@ with open(hard_negatives_filepath, "rt") as fIn:
         data = json.loads(line)
         # Get the positive passage ids
         qid = data["qid"]
-        pos_pids = data["pos"]
+
+        if qid not in ce_scores:
+            continue
+
+        pos_pids = [pid for pid in data["pos"] if pid in ce_scores[qid]]
+
+        if not pos_pids:
+            continue
 
         if len(pos_pids) == 0:  # Skip entries without positives passages
             continue
