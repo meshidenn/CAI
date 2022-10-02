@@ -65,7 +65,7 @@ data_path = args.data_dir
 #### Provide the data_path where nfcorpus has been downloaded and unzipped
 corpus, queries, qrels = GenericDataLoader(data_path).load(split="train")
 
-tokenizer = AutoTokenizer.from_pretrained(args.model_type_or_dir)
+tokenizer = AutoTokenizer.from_pretrained(args.dense_model_name_or_path)
 data_dir = args.data_dir
 
 # out_path = os.path.join(data_path, "result", args.out_name, "result.json")
