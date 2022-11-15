@@ -10,7 +10,7 @@ import json
 from typing import List
 import argparse
 from .sbert import load_sbert
-from splade_vocab.models import Splade, BEIRSpladeModel
+from cai.search_models import Splade, BEIRSpladeModel
 
 logger = logging.getLogger(__name__)
 
