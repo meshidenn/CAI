@@ -14,9 +14,7 @@ from beir import util, LoggingHandler
 from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval.evaluation import EvaluateRetrieval
 
-from sentence_transformers import SentenceTransformer, losses
-from sentence_transformers.models import Transformer, WordWeights, Pooling
-from splade_vocab.models import BEIRSbert, BM25Weight
+from cai.search_models import Splade, BEIRSpladeModel, BEIRSpladeModelIDF, BEIRSpladeModelBM25
 
 
 def calc_idf_and_doclen(corpus, tokenizer, sep):
@@ -38,43 +36,34 @@ def calc_idf_and_doclen(corpus, tokenizer, sep):
 
 
 def main(args):
-    tokenizer = AutoTokenizer.from_pretrained(args.model_type_or_dir)
+    # print(args.load_weight, args.weight_sqrt)
+    model = Splade(args.model_type_or_dir)
+    model.eval()
+
+    tokenizer = model.tokenizer
     data_dir = args.data_dir
 
-    # out_path = os.path.join(data_path, "result", args.out_name, "result.json")
     out_path = os.path.join(args.out_dir, "result.json")
     analysis_out_path = os.path.join(args.out_dir, "analysis.json")
     corpus, queries, qrels = GenericDataLoader(data_folder=data_dir).load(split="test")
     idf, doc_len_ave = calc_idf_and_doclen(corpus, tokenizer, " ")
-    vocab = tokenizer.get_vocab()
-    mode = args.mode
-    if mode == "idf":
-        word_embedding_model = Transformer(args.model_type_or_dir)
-        unknown_word_weight = 1.0
-        pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
-        word_weights = WordWeights(vocab=vocab, word_weights=idf, unknown_word_weight=unknown_word_weight)
-        model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
-    elif mode == "bm25":
-        word_embedding_model = Transformer(args.model_type_or_dir)
-        unknown_word_weight = 1.0
-        word_weights = BM25Weight(
-            vocab=vocab, word_weights=idf, unknown_word_weight=unknown_word_weight, doc_len_ave=doc_len_ave
-        )
-        pooling_model = Pooling(word_embedding_model.get_word_embedding_dimension())
-        model = SentenceTransformer(modules=[word_embedding_model, word_weights, pooling_model])
-    else:
-        model = SentenceTransformer(args.model_type_or_dir)
+    calc_models = {
+        "org": BEIRSpladeModel(model, tokenizer),
+        "idf": BEIRSpladeModelIDF(model, tokenizer, idf),
+        "bm25": BEIRSpladeModelBM25(model, tokenizer, idf, doc_len_ave),
+    }
 
-    model.eval()
+    k_values = [1, 10, 100]
+
     out_results = {}
     analysis = {}
-
-    beir_splade = BEIRSbert(model, tokenizer)
-    dres = DRES(beir_splade)
-    retriever = EvaluateRetrieval(dres, score_function="dot")
+    mode = args.mode
+    beir_splade = calc_models[mode]
+    dres = DRES(beir_splade, batch_size=args.batch_size, corpus_chunk_size=args.corpus_chunk_size)
+    retriever = EvaluateRetrieval(dres, score_function="dot", k_values=k_values)
     results = retriever.retrieve(corpus, queries)
-    ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, [1, 10, 100, 1000])
-    results2 = EvaluateRetrieval.evaluate_custom(qrels, results, [1, 10, 100, 1000], metric="r_cap")
+    ndcg, map_, recall, p = EvaluateRetrieval.evaluate(qrels, results, k_values)
+    results2 = EvaluateRetrieval.evaluate_custom(qrels, results, k_values, metric="r_cap")
     res = {"NDCG@10": ndcg["NDCG@10"], "Recall@100": recall["Recall@100"], "R_cap@100": results2["R_cap@100"]}
     out_results[mode] = res
     analysis[mode] = results
@@ -93,7 +82,9 @@ if __name__ == "__main__":
     parser.add_argument("--model_type_or_dir")
     parser.add_argument("--data_dir")
     parser.add_argument("--out_dir")
-    parser.add_argument("--mode", default="org", help="org.idf,bm25")
+    parser.add_argument("--mode", default="org", help="org, idf, bm25")
+    parser.add_argument("--batch_size", default=128, type=int)
+    parser.add_argument("--corpus_chunk_size", default=50000, type=int)
 
     args = parser.parse_args()
 

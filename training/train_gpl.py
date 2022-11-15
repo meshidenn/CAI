@@ -1,5 +1,14 @@
+import os
+import logging
+import argparse
+from typing import List
+
 from beir.datasets.data_loader import GenericDataLoader
-from gpl_toolkit import (
+from sentence_transformers import SentenceTransformer
+from torch.utils.data import DataLoader
+
+from cai import train_models, losses
+from cai.gpl_toolkit import (
     qgen,
     NegativeMiner,
     MarginDistillationLoss,
@@ -10,16 +19,6 @@ from gpl_toolkit import (
     load_sbert,
     set_logger_format,
 )
-from sentence_transformers import SentenceTransformer
-from torch.utils.data import DataLoader
-import os
-import logging
-import argparse
-from typing import List
-
-from splade_vocab import models, losses
-
-# import crash_ipdb
 
 
 set_logger_format()
@@ -139,7 +138,7 @@ def train(
         #### It can load checkpoints in both SBERT-format (recommended) and Huggingface-format
 
         if args.train_model_type == "splade":
-            word_embedding_model = models.MLMTransformer(base_ckpt, max_seq_length=max_seq_length)
+            word_embedding_model = train_models.MLMTransformer(base_ckpt, max_seq_length=max_seq_length)
             model = SentenceTransformer(modules=[word_embedding_model])
             train_loss = losses.MarginMSELossSplade(model=model, lambda_d=0.08, lambda_q=0.1)
         else:

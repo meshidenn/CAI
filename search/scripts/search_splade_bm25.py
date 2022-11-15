@@ -17,7 +17,7 @@ from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval.evaluation import EvaluateRetrieval
 from pyserini.search import SimpleSearcher, JSimpleSearcherResult
 
-from splade_vocab.models import Splade, BEIRSpladeModel, BEIRSpladeModelIDF, BEIRSpladeModelBM25
+from cai.search_models import Splade, BEIRSpladeModel, BEIRSpladeModelIDF, BEIRSpladeModelBM25
 
 
 def calc_idf_and_doclen(corpus, tokenizer, sep):

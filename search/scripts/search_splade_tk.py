@@ -14,7 +14,7 @@ from beir import util, LoggingHandler
 from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
 from beir.retrieval.evaluation import EvaluateRetrieval
 
-from splade_vocab.models import (
+from cai.search_models import (
     Splade,
     BEIRSpladeDocModel,
     BEIRSpladeDocModelIDF,
