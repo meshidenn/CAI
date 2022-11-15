@@ -30,6 +30,7 @@ defusedxml==0.7.1
 dill==0.3.4
 docker-pycreds==0.4.0
 elasticsearch==7.15.2
+easy_elasticsearch==0.0.9
 entrypoints==0.3
 faiss-cpu==1.7.1.post2
 filelock==3.0.12

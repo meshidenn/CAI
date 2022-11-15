@@ -10,7 +10,7 @@ import logging
 import argparse
 import time
 
-from splade_vocab.models import Splade
+from cai.search_models import Splade
 
 logger = logging.getLogger(__name__)
 
