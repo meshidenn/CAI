@@ -2,19 +2,22 @@ from collections import Counter
 import argparse
 import json
 import os
-from distutils.util import strtobool
 
 import numpy as np
-import torch
-from transformers import AutoModelForMaskedLM, AutoTokenizer, Trainer
 from tqdm import tqdm
 from beir.datasets.data_loader import GenericDataLoader
 from beir.retrieval.evaluation import EvaluateRetrieval
-from beir import util, LoggingHandler
 from beir.retrieval.search.dense import DenseRetrievalExactSearch as DRES
-from beir.retrieval.evaluation import EvaluateRetrieval
 
-from cai.search_models import Splade, BEIRSpladeModel, BEIRSpladeModelIDF, BEIRSpladeModelBM25
+from cai.search_models import (
+    Splade,
+    BEIRSpladeModel,
+    BEIRSpladeModelIDF,
+    BEIRSpladeModelBM25,
+    BEIRSpladeDocModel,
+    BEIRSpladeDocModelIDF,
+    BEIRSpladeDocModelBM25,
+)
 
 
 def calc_idf_and_doclen(corpus, tokenizer, sep):
@@ -51,6 +54,9 @@ def main(args):
         "org": BEIRSpladeModel(model, tokenizer),
         "idf": BEIRSpladeModelIDF(model, tokenizer, idf),
         "bm25": BEIRSpladeModelBM25(model, tokenizer, idf, doc_len_ave),
+        "d-org": BEIRSpladeDocModel(model, tokenizer),
+        "d-idf": BEIRSpladeDocModelIDF(model, tokenizer, idf),
+        "d-bm25": BEIRSpladeDocModelBM25(model, tokenizer, idf, doc_len_ave),
     }
 
     k_values = [1, 10, 100]
