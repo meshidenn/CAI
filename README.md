@@ -1,5 +1,5 @@
 # CAI
-This repository is for our paper [Unsupervised Domain Adaptation for Sparse Retrieval by Filling Vocabulary and Word Frequency Gaps](https://arxiv.org/abs/2211.03988).
+This repository is for our paper [Unsupervised Domain Adaptation for Sparse Retrieval by Filling Vocabulary and Word Frequency Gaps](https://arxiv.org/abs/2211.03988), which is accepted at AACL-IJCNLP2022.
 
 # Installation
 ```
