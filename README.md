@@ -46,5 +46,6 @@ $ cd /path/to/this/repo
 $ cd search/run
 $ bash search_splade.sh <beir_data_dir> <result_out_dir> <model_path>
 ```
-- If you'd like to remove idf weight, change mode val from idf to org in bash files.
-- We prepare other bash files for search with splade-doc, dense retrieval and BM25. If you experiment with them please check them.
+- If you'd like to remove idf weight, change mode val from idf to org in the bash file.
+- If you'd like to run splade-doc, please set d-idf or d-org in the bash file
+- We prepare other bash files for search with dense retrieval and BM25. If you experiment with them please check them.
